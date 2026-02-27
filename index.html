@@ -174,6 +174,8 @@
             const [nearbyRestaurants, setNearbyRestaurants] = useState([]);
             const [isLoadingNearby, setIsLoadingNearby] = useState(false);
             const [lastNearbyFetch, setLastNearbyFetch] = useState(null);
+            const [nearbyApiError, setNearbyApiError] = useState(null); // null | 'key' | 'network'
+            const [searchApiError, setSearchApiError] = useState(null); // null | 'key' | 'network'
             const [searchRadius, setSearchRadius] = useState(8046.72); // 5 miles default
             const [multipleSearchResults, setMultipleSearchResults] = useState([]);
             const [selectedSearchResult, setSelectedSearchResult] = useState(null);
@@ -348,6 +350,7 @@
                 }
 
                 setIsLoadingNearby(true);
+                setNearbyApiError(null);
 
                 try {
                     const response = await fetch('https://places.googleapis.com/v1/places:searchNearby', {
@@ -435,6 +438,14 @@
                 } catch (error) {
                     console.error('Error fetching nearby restaurants:', error);
                     setNearbyRestaurants([]);
+                    // Distinguish API key/auth errors from network errors
+                    if (error.message && error.message.includes('403')) {
+                        setNearbyApiError('key');
+                    } else if (error.message && (error.message.includes('400') || error.message.includes('401'))) {
+                        setNearbyApiError('key');
+                    } else {
+                        setNearbyApiError('network');
+                    }
                 } finally {
                     setIsLoadingNearby(false);
                 }
@@ -701,6 +712,7 @@
                 setIsSearching(true);
                 setMultipleSearchResults([]);
                 setSelectedSearchResult(null);
+                setSearchApiError(null);
                 
                 try {
                     // Build request body with optional location bias
@@ -779,6 +791,11 @@
                 } catch (error) {
                     console.error('Google Places API error:', error);
                     setMultipleSearchResults([]);
+                    if (error.message && (error.message.includes('403') || error.message.includes('400') || error.message.includes('401'))) {
+                        setSearchApiError('key');
+                    } else {
+                        setSearchApiError('network');
+                    }
                 } finally {
                     setIsSearching(false);
                 }
@@ -1295,25 +1312,17 @@
                     const isSelected = selectedSearchResult === multipleSearchResults[multipleSearchResults.indexOf(r)] ||
                         selectedSearchResult === r;
                     const bg = isSelected ? '#FF6B6B' : '#aaa';
+                    const border = isSelected ? '3px solid white' : '2px solid white';
+                    const size = isSelected ? 38 : 32;
                     const icon = L.divIcon({
-                        html: `<div style="width:32px;height:32px;background:${bg};border:2px solid white;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:13px;box-shadow:0 2px 6px rgba(0,0,0,0.3)">${idx + 1}</div>`,
-                        className: '', iconSize: [32, 32], iconAnchor: [16, 16],
+                        html: `<div style="width:${size}px;height:${size}px;background:${bg};border:${border};border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,${isSelected ? '0.4' : '0.3'});cursor:pointer;transition:all 0.15s">${idx + 1}</div>`,
+                        className: '', iconSize: [size, size], iconAnchor: [size/2, size/2],
                     });
-                    const searchStr = (r.address && r.address !== 'Address not available')
-                        ? `${r.name} ${r.address}` : `${r.name} restaurant`;
-                    const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(searchStr)}`;
-                    const popup = `
-                        <div style="font-family:sans-serif;min-width:160px;padding:2px">
-                            <div style="font-weight:700;font-size:13px;margin-bottom:3px">${r.name}</div>
-                            <div style="font-size:11px;color:#888;margin-bottom:6px">📍 ${r.address || 'Address not available'}</div>
-                            <div style="font-size:11px;color:#666;margin-bottom:6px">⭐${r.rating} • ${r.price} • ${r.distance} mi</div>
-                            <a href="${mapsUrl}" target="_blank" rel="noopener noreferrer"
-                               style="display:block;text-align:center;padding:6px 8px;background:linear-gradient(135deg,#FF6B6B,#FF8E53);color:white;border-radius:7px;font-size:11px;font-weight:700;text-decoration:none">
-                                🗺️ Google Maps
-                            </a>
-                        </div>
-                    `;
-                    L.marker([r.lat, r.lng], { icon }).addTo(map).bindPopup(popup, { maxWidth: 200 });
+                    const marker = L.marker([r.lat, r.lng], { icon }).addTo(map);
+                    // Clicking the pin selects this restaurant (turns it orange)
+                    marker.on('click', () => {
+                        setSelectedSearchResult(r);
+                    });
                 });
 
                 const allPoints = resultsWithCoords.map(r => [r.lat, r.lng]);
@@ -1827,45 +1836,62 @@
                             )}
                         </div>
 
-
-                        {/* Discover — AI recommendation */}
-                        <button
-                            onClick={() => runDiscover()}
-                            disabled={isDiscovering}
-                            style={{
-                                width: 'calc(100% - 40px)',
-                                margin: '0 20px 16px',
-                                padding: '20px',
-                                background: 'white',
-                                border: '2px solid #7C3AED',
-                                borderRadius: '16px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '16px',
-                                cursor: isDiscovering ? 'not-allowed' : 'pointer',
-                                transition: 'all 0.2s',
-                                boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
-                                opacity: isDiscovering ? 0.7 : 1,
-                            }}
-                            onMouseEnter={(e) => { if (!isDiscovering) { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(124,58,237,0.2)'; }}}
-                            onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.06)'; }}
-                        >
+                        {/* AI Discover — peer section, same visual weight */}
+                        <div style={{
+                            background: 'white',
+                            borderRadius: '24px',
+                            padding: '28px 20px',
+                            marginBottom: '30px',
+                            boxShadow: '0 4px 16px rgba(255,107,107,0.12)',
+                            border: '2px solid rgba(255,107,107,0.15)',
+                            textAlign: 'center',
+                            position: 'relative',
+                            overflow: 'hidden',
+                        }}>
                             <div style={{
-                                width: '48px', height: '48px',
-                                background: 'linear-gradient(135deg, #7C3AED 0%, #9F67F5 100%)',
-                                borderRadius: '12px',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                fontSize: '24px', flexShrink: 0,
-                            }}>✨</div>
-                            <div style={{ flex: 1, textAlign: 'left' }}>
-                                <div style={{ fontSize: '18px', fontWeight: '700', color: '#1a1a1a', marginBottom: '4px' }}>
-                                    {isDiscovering ? 'Analyzing…' : 'Discover'}
-                                </div>
-                                <div style={{ fontSize: '14px', color: '#666' }}>
-                                    AI picks a new spot based on your taste
-                                </div>
-                            </div>
-                        </button>
+                                position: 'absolute', top: '-40%', left: '-5%',
+                                width: '160px', height: '160px',
+                                background: 'rgba(255,142,83,0.06)',
+                                borderRadius: '50%',
+                            }} />
+                            <div style={{ fontSize: '36px', marginBottom: '8px' }}>✨</div>
+                            <h2 style={{
+                                fontSize: '24px', fontWeight: '700', color: '#1a1a1a',
+                                marginBottom: '8px',
+                                fontFamily: '"Playfair Display", serif',
+                            }}>
+                                AI Discover
+                            </h2>
+                            <p style={{
+                                color: '#888', marginBottom: '20px', fontSize: '15px', lineHeight: '1.5',
+                            }}>
+                                Analyzes your favorites to suggest something new nearby
+                            </p>
+                            <button
+                                onClick={() => runDiscover()}
+                                disabled={isDiscovering}
+                                style={{
+                                    background: isDiscovering ? '#e0e0e0' : 'linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%)',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '16px',
+                                    padding: '16px 36px',
+                                    fontSize: '17px',
+                                    fontWeight: '700',
+                                    cursor: isDiscovering ? 'not-allowed' : 'pointer',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '10px',
+                                    boxShadow: isDiscovering ? 'none' : '0 6px 18px rgba(255,107,107,0.35)',
+                                    transition: 'transform 0.2s',
+                                }}
+                                onMouseEnter={(e) => { if (!isDiscovering) e.currentTarget.style.transform = 'scale(1.05)'; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
+                            >
+                                <Sparkles size={22} />
+                                {isDiscovering ? 'Analyzing…' : 'Discover for Me'}
+                            </button>
+                        </div>
 
                         {/* Stats */}
                         <div style={{
@@ -1939,132 +1965,91 @@
 
                     {/* Restaurant List */}
                     <div style={{ padding: '0 20px 100px' }}>
-                        <div style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            marginBottom: '12px',
-                        }}>
-                            <h3 style={{
-                                fontSize: '20px',
-                                fontWeight: '700',
-                                margin: 0,
-                            }}>
+                        {/* Row 1: Title */}
+                        <div style={{ marginBottom: '10px' }}>
+                            <h3 style={{ fontSize: '20px', fontWeight: '700', margin: 0 }}>
                                 {listFilter === 'favorites' ? 'My Favorites' : 'Near You'}
                             </h3>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                {/* Map / List toggle */}
-                                <div style={{
-                                    display: 'flex',
-                                    background: '#f5f5f5',
-                                    borderRadius: '10px',
-                                    padding: '3px',
-                                    gap: '2px',
-                                }}>
-                                    <button
-                                        onClick={() => setListViewMode('list')}
-                                        style={{
-                                            padding: '5px 10px',
-                                            borderRadius: '8px',
-                                            border: 'none',
-                                            background: listViewMode === 'list' ? 'white' : 'transparent',
-                                            color: listViewMode === 'list' ? '#FF6B6B' : '#999',
-                                            fontSize: '13px',
-                                            fontWeight: '600',
-                                            cursor: 'pointer',
-                                            boxShadow: listViewMode === 'list' ? '0 1px 4px rgba(0,0,0,0.1)' : 'none',
-                                            transition: 'all 0.2s',
-                                        }}
-                                    >
-                                        ☰ List
-                                    </button>
-                                    <button
-                                        onClick={() => setListViewMode('map')}
-                                        style={{
-                                            padding: '5px 10px',
-                                            borderRadius: '8px',
-                                            border: 'none',
-                                            background: listViewMode === 'map' ? 'white' : 'transparent',
-                                            color: listViewMode === 'map' ? '#FF6B6B' : '#999',
-                                            fontSize: '13px',
-                                            fontWeight: '600',
-                                            cursor: 'pointer',
-                                            boxShadow: listViewMode === 'map' ? '0 1px 4px rgba(0,0,0,0.1)' : 'none',
-                                            transition: 'all 0.2s',
-                                        }}
-                                    >
-                                        🗺️ Map
-                                    </button>
-                                </div>
+                        </div>
 
-                                {listFilter === 'favorites' && totalFavoritesCount > 3 && (
-                                    <button 
-                                        onClick={() => setShowAllFavorites(!showAllFavorites)}
-                                        style={{
-                                            background: 'transparent',
-                                            border: 'none',
-                                            color: '#FF6B6B',
-                                            fontSize: '14px',
-                                            fontWeight: '600',
-                                            cursor: 'pointer',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '4px',
-                                        }}
-                                    >
-                                        {showAllFavorites ? 'Show Less' : `View All (${totalFavoritesCount})`}
-                                        <ChevronRight size={16} style={{
-                                            transform: showAllFavorites ? 'rotate(-90deg)' : 'rotate(0deg)',
-                                            transition: 'transform 0.2s',
-                                        }} />
-                                    </button>
-                                )}
-                                {listFilter === 'all' && filteredRestaurants.length > NEARBY_DEFAULT_LIMIT && (
-                                    <button 
-                                        onClick={() => setShowAllNearby(!showAllNearby)}
-                                        style={{
-                                            background: 'transparent',
-                                            border: 'none',
-                                            color: '#FF6B6B',
-                                            fontSize: '14px',
-                                            fontWeight: '600',
-                                            cursor: 'pointer',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '4px',
-                                        }}
-                                    >
-                                        {showAllNearby ? 'Show Less' : `View All (${filteredRestaurants.length})`}
-                                        <ChevronRight size={16} style={{
-                                            transform: showAllNearby ? 'rotate(-90deg)' : 'rotate(0deg)',
-                                            transition: 'transform 0.2s',
-                                        }} />
-                                    </button>
-                                )}
-                                {listFilter === 'all' && userLocation && listViewMode === 'list' && (
-                                    <button 
-                                        onClick={() => {
-                                            setLastNearbyFetch(null);
-                                            fetchNearbyRestaurants();
-                                        }}
-                                        disabled={isLoadingNearby}
-                                        style={{
-                                            background: 'transparent',
-                                            border: 'none',
-                                            color: '#FF6B6B',
-                                            fontSize: '14px',
-                                            fontWeight: '600',
-                                            cursor: isLoadingNearby ? 'not-allowed' : 'pointer',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '4px',
-                                            opacity: isLoadingNearby ? 0.5 : 1,
-                                        }}
-                                    >
-                                        🔄 {isLoadingNearby ? '...' : 'Refresh'}
-                                    </button>
-                                )}
+                        {/* Row 2: List/Map toggle + View All / Refresh */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px', flexWrap: 'wrap' }}>
+                            {/* List / Map toggle */}
+                            <div style={{
+                                display: 'flex', background: '#f5f5f5',
+                                borderRadius: '10px', padding: '3px', gap: '2px',
+                            }}>
+                                <button
+                                    onClick={() => setListViewMode('list')}
+                                    style={{
+                                        padding: '5px 10px', borderRadius: '8px', border: 'none',
+                                        background: listViewMode === 'list' ? 'white' : 'transparent',
+                                        color: listViewMode === 'list' ? '#FF6B6B' : '#999',
+                                        fontSize: '13px', fontWeight: '600', cursor: 'pointer',
+                                        boxShadow: listViewMode === 'list' ? '0 1px 4px rgba(0,0,0,0.1)' : 'none',
+                                        transition: 'all 0.2s',
+                                    }}
+                                >☰ List</button>
+                                <button
+                                    onClick={() => setListViewMode('map')}
+                                    style={{
+                                        padding: '5px 10px', borderRadius: '8px', border: 'none',
+                                        background: listViewMode === 'map' ? 'white' : 'transparent',
+                                        color: listViewMode === 'map' ? '#FF6B6B' : '#999',
+                                        fontSize: '13px', fontWeight: '600', cursor: 'pointer',
+                                        boxShadow: listViewMode === 'map' ? '0 1px 4px rgba(0,0,0,0.1)' : 'none',
+                                        transition: 'all 0.2s',
+                                    }}
+                                >🗺️ Map</button>
                             </div>
+
+                            {listFilter === 'favorites' && totalFavoritesCount > 3 && (
+                                <button
+                                    onClick={() => setShowAllFavorites(!showAllFavorites)}
+                                    style={{
+                                        background: 'transparent', border: 'none', color: '#FF6B6B',
+                                        fontSize: '14px', fontWeight: '600', cursor: 'pointer',
+                                        display: 'flex', alignItems: 'center', gap: '4px',
+                                    }}
+                                >
+                                    {showAllFavorites ? 'Show Less' : `View All (${totalFavoritesCount})`}
+                                    <ChevronRight size={16} style={{
+                                        transform: showAllFavorites ? 'rotate(-90deg)' : 'rotate(0deg)',
+                                        transition: 'transform 0.2s',
+                                    }} />
+                                </button>
+                            )}
+                            {listFilter === 'all' && filteredRestaurants.length > NEARBY_DEFAULT_LIMIT && (
+                                <button
+                                    onClick={() => setShowAllNearby(!showAllNearby)}
+                                    style={{
+                                        background: 'transparent', border: 'none', color: '#FF6B6B',
+                                        fontSize: '14px', fontWeight: '600', cursor: 'pointer',
+                                        display: 'flex', alignItems: 'center', gap: '4px',
+                                    }}
+                                >
+                                    {showAllNearby ? 'Show Less' : `View All (${filteredRestaurants.length})`}
+                                    <ChevronRight size={16} style={{
+                                        transform: showAllNearby ? 'rotate(-90deg)' : 'rotate(0deg)',
+                                        transition: 'transform 0.2s',
+                                    }} />
+                                </button>
+                            )}
+                            {listFilter === 'all' && userLocation && listViewMode === 'list' && (
+                                <button
+                                    onClick={() => { setLastNearbyFetch(null); fetchNearbyRestaurants(); }}
+                                    disabled={isLoadingNearby}
+                                    style={{
+                                        background: 'transparent', border: 'none', color: '#FF6B6B',
+                                        fontSize: '14px', fontWeight: '600',
+                                        cursor: isLoadingNearby ? 'not-allowed' : 'pointer',
+                                        display: 'flex', alignItems: 'center', gap: '4px',
+                                        opacity: isLoadingNearby ? 0.5 : 1,
+                                    }}
+                                >
+                                    🔄 {isLoadingNearby ? '...' : 'Refresh'}
+                                </button>
+                            )}
                         </div>
 
                         {/* Sort + Filter Controls — always visible in list view */}
@@ -2141,11 +2126,13 @@
                                             Price {(listFilter === 'favorites' ? favoritesSort : nearbySort) === 'price' ? (priceSortDir === 'asc' ? '↑' : '↓') : ''}
                                         </button>
                                     </div>
-                                    {/* Filter toggle */}
+                                </div>
+                                {/* Filter row — left-justified on its own line */}
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                                     <button
                                         onClick={() => setShowListFilters(!showListFilters)}
                                         style={{
-                                            marginLeft: 'auto', padding: '5px 11px', borderRadius: '16px', border: 'none',
+                                            padding: '5px 11px', borderRadius: '16px', border: 'none',
                                             background: totalActiveFilters > 0
                                                 ? 'linear-gradient(135deg,#FF6B6B,#FF8E53)' : '#f0f0f0',
                                             color: totalActiveFilters > 0 ? 'white' : '#666',
@@ -2283,11 +2270,11 @@
                                             ⭐ {activeRatingFilter}+ ✕
                                         </span>
                                     )}
-                                    {/* Filter button — right-justified */}
+                                    {/* Filter button — left-justified */}
                                     <button
                                         onClick={() => setShowListFilters(!showListFilters)}
                                         style={{
-                                            marginLeft: 'auto', padding: '6px 13px', borderRadius: '16px', border: 'none',
+                                            padding: '6px 13px', borderRadius: '16px', border: 'none',
                                             background: totalActiveFilters > 0
                                                 ? 'linear-gradient(135deg,#FF6B6B,#FF8E53)' : '#f0f0f0',
                                             color: totalActiveFilters > 0 ? 'white' : '#666',
@@ -2475,6 +2462,29 @@
                                     animation: 'spin 1s linear infinite', margin: '0 auto 16px',
                                 }} />
                                 <p style={{ fontSize: '15px', color: '#666', margin: 0 }}>Finding restaurants near you…</p>
+                            </div>
+                        ) : listViewMode === 'list' && listFilter === 'all' && nearbyApiError ? (
+                            <div style={{
+                                background: 'white', borderRadius: '16px', padding: '32px 24px',
+                                textAlign: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+                            }}>
+                                <div style={{ fontSize: '40px', marginBottom: '12px' }}>🔑</div>
+                                <h4 style={{ fontSize: '17px', fontWeight: '700', marginBottom: '8px', color: '#1a1a1a' }}>
+                                    {nearbyApiError === 'key' ? 'API Key Not Authorized' : 'Connection Error'}
+                                </h4>
+                                <p style={{ fontSize: '13px', color: '#666', marginBottom: '16px', lineHeight: '1.6' }}>
+                                    {nearbyApiError === 'key'
+                                        ? 'Your Google Places API key needs to allow this domain. In Google Cloud Console → Credentials → your key → HTTP referrers, add: dreamsical.github.io/*'
+                                        : 'Could not reach Google Places. Check your connection and try again.'}
+                                </p>
+                                <button
+                                    onClick={() => { setLastNearbyFetch(null); fetchNearbyRestaurants(); }}
+                                    style={{
+                                        padding: '10px 20px', borderRadius: '10px', border: 'none',
+                                        background: 'linear-gradient(135deg,#FF6B6B,#FF8E53)',
+                                        color: 'white', fontSize: '14px', fontWeight: '600', cursor: 'pointer',
+                                    }}
+                                >Try Again</button>
                             </div>
                         ) : listViewMode === 'list' && displayRestaurants.length === 0 ? (
                             <div style={{
@@ -2935,6 +2945,22 @@
                                                 </>
                                             )}
                                         </button>
+                                        {searchApiError && (
+                                            <div style={{
+                                                marginTop: '12px', padding: '12px 14px',
+                                                background: '#fff3f3', borderRadius: '10px',
+                                                border: '1px solid #ffd0d0',
+                                            }}>
+                                                <div style={{ fontSize: '13px', fontWeight: '700', color: '#c0392b', marginBottom: '4px' }}>
+                                                    {searchApiError === 'key' ? '🔑 API Key Not Authorized' : '⚠️ Connection Error'}
+                                                </div>
+                                                <div style={{ fontSize: '12px', color: '#666', lineHeight: '1.5' }}>
+                                                    {searchApiError === 'key'
+                                                        ? 'Add dreamsical.github.io/* to your Google API key\'s allowed HTTP referrers in Google Cloud Console.'
+                                                        : 'Could not reach Google. Check your connection and try again.'}
+                                                </div>
+                                            </div>
+                                        )}
                                     </>
                                 ) : !manualEntryMode ? (
                                     <>
