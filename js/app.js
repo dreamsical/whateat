@@ -1231,8 +1231,6 @@ function RestaurantApp() {
                         cursor: 'pointer', backdropFilter: 'blur(10px)',
                     }}
                 >← Back</button>
-
-                {/* Scrollable inner layer — only scrolls vertically */}
                 <div style={{
                     width: '100%',
                     height: '100%',
@@ -1401,8 +1399,6 @@ function RestaurantApp() {
                     </button>
                 </div>
             </div>
-
-            {/* Settings Modal */}
             {showSettings && (
                 <div style={{
                     position: 'fixed',
@@ -1608,8 +1604,6 @@ function RestaurantApp() {
                     <p style={{ color: 'rgba(255,255,255,0.85)', marginBottom: '16px', fontSize: '14px' }}>
                         Completely random — let fate decide
                     </p>
-
-                    {/* Pool toggle */}
                     <div style={{
                         display: 'flex', gap: '8px', marginBottom: '16px',
                         background: 'rgba(255,255,255,0.15)', padding: '5px',
@@ -1638,8 +1632,6 @@ function RestaurantApp() {
                             }}
                         >🗺️ Try Nearby</button>
                     </div>
-
-                    {/* Spin button */}
                     <button
                         onClick={() => spinForRestaurant()}
                         disabled={isSpinning}
@@ -1707,8 +1699,6 @@ function RestaurantApp() {
                         </button>
                     </div>
                 </div>
-
-                {/* Stats */}
                 <div style={{
                     display: 'grid',
                     gridTemplateColumns: '1fr 1fr',
@@ -1779,8 +1769,6 @@ function RestaurantApp() {
                     </div>
                 </div>
             </div>
-
-            {/* Restaurant List */}
             <div style={{ padding: '0 20px 100px' }}>
 
                 {/* Row 1: Title + View All / Refresh right-justified */}
@@ -1832,8 +1820,6 @@ function RestaurantApp() {
                         )}
                     </div>
                 </div>
-
-                {/* Row 2: List/Map toggle — left edge */}
                 <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
                     <div style={{ display: 'flex', background: '#f5f5f5', borderRadius: '10px', padding: '3px', gap: '2px' }}>
                         <button
@@ -1860,8 +1846,6 @@ function RestaurantApp() {
                         >🗺️ Map</button>
                     </div>
                 </div>
-
-                {/* Sort + Filter Controls — always visible in list view */}
                 {listViewMode === 'list' && (
                     <div style={{ marginBottom: '12px' }}>
                         {/* Sort row — pills flush-left, no label indent */}
@@ -1933,7 +1917,6 @@ function RestaurantApp() {
                                     Price {(listFilter === 'favorites' ? favoritesSort : nearbySort) === 'price' ? (priceSortDir === 'asc' ? '↑' : '↓') : ''}
                                 </button>
                         </div>
-                        {/* Filter row — left-justified on its own line */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                             <button
                                 onClick={() => setShowListFilters(!showListFilters)}
@@ -1949,8 +1932,6 @@ function RestaurantApp() {
                                 🎛️ Filter {totalActiveFilters > 0 ? `(${totalActiveFilters})` : ''}
                             </button>
                         </div>
-
-                        {/* Expandable filter panel */}
                         {showListFilters && (
                             <div style={{
                                 background: 'white', borderRadius: '14px', padding: '14px',
@@ -1979,7 +1960,6 @@ function RestaurantApp() {
                                         )}
                                     </div>
                                 </div>
-                                {/* Price */}
                                 <div style={{ marginBottom: '12px' }}>
                                     <div style={{ fontSize: '12px', fontWeight: '700', color: '#444', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                                         Price Range
@@ -1999,7 +1979,6 @@ function RestaurantApp() {
                                         ))}
                                     </div>
                                 </div>
-                                {/* Distance */}
                                 <div style={{ marginBottom: '4px' }}>
                                     <div style={{ fontSize: '12px', fontWeight: '700', color: '#444', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                                         Max Distance
@@ -2015,7 +1994,6 @@ function RestaurantApp() {
                                         ))}
                                     </div>
                                 </div>
-                                {/* Rating */}
                                 <div style={{ marginBottom: '4px', marginTop: '12px' }}>
                                     <div style={{ fontSize: '12px', fontWeight: '700', color: '#444', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                                         Min Rating
@@ -2031,7 +2009,6 @@ function RestaurantApp() {
                                         ))}
                                     </div>
                                 </div>
-                                {/* Clear all */}
                                 {totalActiveFilters > 0 && (
                                     <button onClick={clearAllListFilters}
                                         style={{
@@ -2091,8 +2068,6 @@ function RestaurantApp() {
                                 🎛️ Filter {totalActiveFilters > 0 ? `(${totalActiveFilters})` : ''}
                             </button>
                         </div>
-
-                        {/* Expandable filter panel (shared with list view) */}
                         {showListFilters && (
                             <div style={{
                                 background: 'white', borderRadius: '14px', padding: '14px',
@@ -2138,7 +2113,6 @@ function RestaurantApp() {
                                         ))}
                                     </div>
                                 </div>
-                                {/* Rating */}
                                 <div style={{ marginBottom: '4px', marginTop: '12px' }}>
                                     <div style={{ fontSize: '12px', fontWeight: '700', color: '#444', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Min Rating</div>
                                     <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
@@ -2447,8 +2421,6 @@ function RestaurantApp() {
             >
                 <Plus size={28} />
             </button>
-
-            {/* Add Restaurant Modal */}
             {showAddModal && (
                 <div style={{
                     position: 'fixed', inset: 0, overflow: 'hidden', zIndex: 1000,
@@ -2511,8 +2483,6 @@ function RestaurantApp() {
                             </button>
                         </div>
                         </div>
-
-                        {/* Scrollable content */}
                         <div style={{ overflowY: 'auto', padding: '0 20px 20px', flex: 1 }}>
 
                         {/* Tab toggle: Search vs Manual */}
@@ -2782,7 +2752,6 @@ function RestaurantApp() {
                                             <p style={{ fontSize: '14px', color: '#666', margin: 0 }}>
                                                 Found {multipleSearchResults.length} result{multipleSearchResults.length > 1 ? 's' : ''}. Select one:
                                             </p>
-                                            {/* List / Map toggle for search results */}
                                             <div style={{
                                                 display: 'flex',
                                                 background: '#f5f5f5',
@@ -2822,8 +2791,6 @@ function RestaurantApp() {
                                                 >🗺️ Map</button>
                                             </div>
                                         </div>
-
-                                        {/* MAP VIEW of search results */}
                                         {addModalViewMode === 'map' && (
                                             <div style={{ marginBottom: '12px' }}>
                                                 <div
@@ -3044,10 +3011,10 @@ function RestaurantApp() {
                                 )}
                             </>
                         ) : null}
-                        </div>{/* end scrollable content */}
+                        </div>
                     </div>
-                </div>{/* end inner scroll layer */}
-                </div>{/* end outer overflow:hidden */}
+                </div>
+                </div>
             )}
 
 
@@ -3164,8 +3131,8 @@ function RestaurantApp() {
                             </>
                         )}
                     </div>
-                    </div>{/* end inner scroll layer */}
-                </div>{/* end outer overflow:hidden */}
+                    </div>
+                </div>
             )}
 
             {/* Duplicate Warning Modal */}
