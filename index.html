@@ -228,6 +228,7 @@
             const addLeafletMapRef = useRef(null);
             const addModalListRef = useRef(null);       // scrollable results list container
             const selectedResultRef = useRef(null);     // currently-selected result item
+            const selectionFromMapRef = useRef(false);  // true when selection was triggered by a map pin tap
             const [addModalViewMode, setAddModalViewMode] = useState('list'); // 'list' or 'map'
             const [showDuplicateWarning, setShowDuplicateWarning] = useState(false);
             const [duplicateName, setDuplicateName] = useState('');
@@ -1321,8 +1322,9 @@
                         className: '', iconSize: [size, size], iconAnchor: [size/2, size/2],
                     });
                     const marker = L.marker([r.lat, r.lng], { icon }).addTo(map);
-                    // Clicking the pin selects this restaurant (turns it orange)
+                    // Clicking the pin selects this restaurant (turns it orange) and scrolls list to it
                     marker.on('click', () => {
+                        selectionFromMapRef.current = true;
                         setSelectedSearchResult(r);
                     });
                 });
@@ -1339,23 +1341,20 @@
                 };
             }, [addModalViewMode, multipleSearchResults.length, selectedSearchResult]);
 
-            // When a pin or list item is selected, scroll the list strip to show it — stay in current view mode
+            // Only scroll the list when the user tapped a map pin (not when they clicked a list item)
             useEffect(() => {
-                if (!selectedSearchResult) return;
-                // Scroll the selected item into view inside the list container
-                setTimeout(() => {
-                    if (selectedResultRef.current && addModalListRef.current) {
-                        const container = addModalListRef.current;
-                        const item = selectedResultRef.current;
-                        const itemTop = item.offsetTop;
-                        const itemBottom = itemTop + item.offsetHeight;
-                        const containerTop = container.scrollTop;
-                        const containerBottom = containerTop + container.clientHeight;
-                        if (itemTop < containerTop || itemBottom > containerBottom) {
-                            container.scrollTo({ top: itemTop - 8, behavior: 'smooth' });
-                        }
-                    }
-                }, 80);
+                if (!selectedSearchResult || !selectionFromMapRef.current) return;
+                selectionFromMapRef.current = false;
+                requestAnimationFrame(() => {
+                    const container = addModalListRef.current;
+                    const item = selectedResultRef.current;
+                    if (!container || !item) return;
+                    // Calculate item's top relative to the scroll container (not the page)
+                    const containerRect = container.getBoundingClientRect();
+                    const itemRect = item.getBoundingClientRect();
+                    const relativeTop = itemRect.top - containerRect.top + container.scrollTop;
+                    container.scrollTo({ top: relativeTop - 8, behavior: 'smooth' });
+                });
             }, [selectedSearchResult]);
 
             if (view === 'result' && selectedRestaurant) {
