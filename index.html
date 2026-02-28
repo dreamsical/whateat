@@ -1714,94 +1714,95 @@
                     )}
 
                     {/* Spinner Hero — compact combined card */}
-                    <div style={{ padding: '16px 20px 0' }}>
+                    <div style={{ padding: '20px 20px 0' }}>
                         <div style={{
                             background: 'linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%)',
-                            borderRadius: '20px',
-                            padding: '20px',
+                            borderRadius: '24px',
+                            padding: '36px 20px 28px',
                             marginBottom: '12px',
-                            boxShadow: '0 8px 28px rgba(255, 107, 107, 0.28)',
+                            boxShadow: '0 10px 40px rgba(255, 107, 107, 0.3)',
                             position: 'relative',
                             overflow: 'hidden',
                             textAlign: 'center',
                         }}>
                             <div style={{
-                                position: 'absolute', top: '-30%', right: '-8%',
-                                width: '140px', height: '140px',
-                                background: 'rgba(255,255,255,0.08)',
+                                position: 'absolute', top: '-50%', right: '-10%',
+                                width: '200px', height: '200px',
+                                background: 'rgba(255,255,255,0.1)',
                                 borderRadius: '50%',
                                 animation: 'float 6s ease-in-out infinite',
                             }} />
 
-                            {/* Random Pick row */}
-                            <div style={{ marginBottom: '14px' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '6px' }}>
-                                    <span style={{ fontSize: '20px' }}>🎲</span>
-                                    <span style={{ fontSize: '20px', fontWeight: '700', color: 'white', fontFamily: '"Playfair Display", serif' }}>
-                                        Random Pick
-                                    </span>
-                                </div>
+                            {/* Random Pick heading */}
+                            <h2 style={{
+                                fontSize: '32px', fontWeight: '700', color: 'white',
+                                marginBottom: '8px', fontFamily: '"Playfair Display", serif',
+                            }}>
+                                Random Pick 🎲
+                            </h2>
+                            <p style={{ color: 'rgba(255,255,255,0.9)', marginBottom: '24px', fontSize: '16px' }}>
+                                Completely random — let fate decide
+                            </p>
 
-                                {/* Pool toggle — compact */}
-                                <div style={{
-                                    display: 'inline-flex', gap: '4px',
-                                    background: 'rgba(255,255,255,0.18)',
-                                    padding: '4px', borderRadius: '10px',
-                                    marginBottom: '12px',
-                                }}>
-                                    <button
-                                        onClick={() => setSpinMode('favorites')}
-                                        style={{
-                                            padding: '6px 14px', background: spinMode === 'favorites' ? 'white' : 'transparent',
-                                            color: spinMode === 'favorites' ? '#FF6B6B' : 'white',
-                                            border: 'none', borderRadius: '7px', fontSize: '13px', fontWeight: '600',
-                                            cursor: 'pointer', transition: 'all 0.2s',
-                                            boxShadow: spinMode === 'favorites' ? '0 1px 4px rgba(0,0,0,0.15)' : 'none',
-                                        }}
-                                    >❤️ Favorites</button>
-                                    <button
-                                        onClick={() => setSpinMode('nearby')}
-                                        style={{
-                                            padding: '6px 14px', background: spinMode === 'nearby' ? 'white' : 'transparent',
-                                            color: spinMode === 'nearby' ? '#FF6B6B' : 'white',
-                                            border: 'none', borderRadius: '7px', fontSize: '13px', fontWeight: '600',
-                                            cursor: 'pointer', transition: 'all 0.2s',
-                                            boxShadow: spinMode === 'nearby' ? '0 1px 4px rgba(0,0,0,0.15)' : 'none',
-                                        }}
-                                    >🗺️ Nearby</button>
-                                </div>
-
-                                <div>
-                                    <button
-                                        onClick={() => spinForRestaurant()}
-                                        disabled={isSpinning}
-                                        style={{
-                                            background: 'white', color: '#FF6B6B', border: 'none',
-                                            borderRadius: '12px', padding: '13px 28px',
-                                            fontSize: '16px', fontWeight: '700',
-                                            cursor: isSpinning ? 'not-allowed' : 'pointer',
-                                            display: 'inline-flex', alignItems: 'center', gap: '8px',
-                                            boxShadow: '0 4px 14px rgba(0,0,0,0.14)',
-                                            transition: 'transform 0.2s',
-                                            animation: isSpinning ? 'pulse 1s infinite' : 'none',
-                                        }}
-                                        onMouseEnter={(e) => !isSpinning && (e.currentTarget.style.transform = 'scale(1.05)')}
-                                        onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
-                                    >
-                                        <Shuffle size={20} style={{ animation: isSpinning ? 'spin 1s linear infinite' : 'none' }} />
-                                        {isSpinning ? 'Spinning...' : 'Spin to Decide!'}
-                                    </button>
-                                </div>
-
-                                {isSpinning && selectedRestaurant && (
-                                    <div style={{ marginTop: '10px', color: 'white', fontSize: '17px', fontWeight: '600', animation: 'pulse 0.3s ease-in-out' }}>
-                                        {selectedRestaurant.name}
-                                    </div>
-                                )}
+                            {/* Pool toggle */}
+                            <div style={{
+                                display: 'flex', gap: '12px', marginBottom: '24px',
+                                background: 'rgba(255,255,255,0.15)', padding: '6px',
+                                borderRadius: '12px', backdropFilter: 'blur(10px)',
+                            }}>
+                                <button
+                                    onClick={() => setSpinMode('favorites')}
+                                    style={{
+                                        flex: 1, padding: '12px 20px',
+                                        background: spinMode === 'favorites' ? 'white' : 'transparent',
+                                        color: spinMode === 'favorites' ? '#FF6B6B' : 'white',
+                                        border: 'none', borderRadius: '8px', fontSize: '15px', fontWeight: '600',
+                                        cursor: 'pointer', transition: 'all 0.3s',
+                                        boxShadow: spinMode === 'favorites' ? '0 2px 8px rgba(0,0,0,0.15)' : 'none',
+                                    }}
+                                >❤️ My Favorites</button>
+                                <button
+                                    onClick={() => setSpinMode('nearby')}
+                                    style={{
+                                        flex: 1, padding: '12px 20px',
+                                        background: spinMode === 'nearby' ? 'white' : 'transparent',
+                                        color: spinMode === 'nearby' ? '#FF6B6B' : 'white',
+                                        border: 'none', borderRadius: '8px', fontSize: '15px', fontWeight: '600',
+                                        cursor: 'pointer', transition: 'all 0.3s',
+                                        boxShadow: spinMode === 'nearby' ? '0 2px 8px rgba(0,0,0,0.15)' : 'none',
+                                    }}
+                                >🗺️ Try Nearby</button>
                             </div>
 
+                            {/* Spin button */}
+                            <button
+                                onClick={() => spinForRestaurant()}
+                                disabled={isSpinning}
+                                style={{
+                                    background: 'white', color: '#FF6B6B', border: 'none',
+                                    borderRadius: '16px', padding: '18px 36px',
+                                    fontSize: '18px', fontWeight: '700',
+                                    cursor: isSpinning ? 'not-allowed' : 'pointer',
+                                    display: 'inline-flex', alignItems: 'center', gap: '10px',
+                                    boxShadow: '0 8px 20px rgba(0,0,0,0.15)',
+                                    transition: 'transform 0.2s',
+                                    animation: isSpinning ? 'pulse 1s infinite' : 'none',
+                                }}
+                                onMouseEnter={(e) => !isSpinning && (e.currentTarget.style.transform = 'scale(1.05)')}
+                                onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+                            >
+                                <Shuffle size={24} style={{ animation: isSpinning ? 'spin 1s linear infinite' : 'none' }} />
+                                {isSpinning ? 'Spinning...' : 'Spin to Decide!'}
+                            </button>
+
+                            {isSpinning && selectedRestaurant && (
+                                <div style={{ marginTop: '20px', color: 'white', fontSize: '20px', fontWeight: '600', animation: 'pulse 0.3s ease-in-out' }}>
+                                    {selectedRestaurant.name}
+                                </div>
+                            )}
+
                             {/* Divider */}
-                            <div style={{ height: '1px', background: 'rgba(255,255,255,0.25)', margin: '4px 0 16px' }} />
+                            <div style={{ height: '1px', background: 'rgba(255,255,255,0.25)', margin: '24px 0 20px' }} />
 
                             {/* AI Discover row */}
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', textAlign: 'left' }}>
