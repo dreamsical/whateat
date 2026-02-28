@@ -13,33 +13,25 @@
         *, *::before, *::after {
             box-sizing: border-box;
         }
-        html, body {
-            margin: 0;
-            padding: 0;
-            overflow-x: hidden;
-            max-width: 100%;
-            width: 100%;
+        html {
+            overflow: hidden;
+            height: 100%;
         }
         body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow-x: hidden;
+            overscroll-behavior: none;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
                 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
                 sans-serif;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
-            /* Prevent horizontal swipe on iOS Safari */
-            touch-action: pan-y pinch-zoom;
-            overscroll-behavior-x: none;
         }
         #root {
-            min-height: 100vh;
-            width: 100%;
-            max-width: 100%;
+            height: 100%;
             overflow-x: hidden;
-            position: relative;
-        }
-        /* Prevent any fixed element from causing horizontal scroll */
-        [style*="position: fixed"], [style*="position:fixed"] {
-            max-width: 100vw;
         }
         .leaflet-container {
             border-radius: 16px;
@@ -1383,22 +1375,14 @@
                     <div style={{
                         position: 'fixed',
                         inset: 0,
-                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        overflow: 'hidden',
                         fontFamily: '"DM Sans", -apple-system, BlinkMacSystemFont, sans-serif',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        padding: '20px',
-                        boxSizing: 'border-box',
-                        overflowX: 'hidden',
-                        overflowY: 'auto',
                     }}>
-                        {/* Back button */}
+                        {/* Back button pinned to top-left of the viewport */}
                         <button
                             onClick={() => setView('main')}
                             style={{
-                                position: 'absolute', top: '20px', left: '20px',
+                                position: 'absolute', top: '20px', left: '20px', zIndex: 10,
                                 background: 'rgba(255,255,255,0.2)', border: 'none',
                                 borderRadius: '10px', padding: '8px 16px',
                                 color: 'white', fontSize: '14px', fontWeight: '600',
@@ -1406,13 +1390,27 @@
                             }}
                         >← Back</button>
 
+                        {/* Scrollable inner layer — only scrolls vertically */}
+                        <div style={{
+                            width: '100%',
+                            height: '100%',
+                            overflowY: 'auto',
+                            overflowX: 'hidden',
+                            WebkitOverflowScrolling: 'touch',
+                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            padding: '64px 20px 20px',
+                            boxSizing: 'border-box',
+                        }}>
                         <div style={{
                             background: 'white',
                             borderRadius: '20px',
                             padding: '24px 20px 20px',
                             maxWidth: '380px',
                             width: '100%',
-                            boxSizing: 'border-box',
                             textAlign: 'center',
                             boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
                             animation: 'slideUp 0.5s ease-out',
@@ -1459,7 +1457,6 @@
                                     background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                                     color: 'white', border: 'none', borderRadius: '12px',
                                     fontSize: '15px', fontWeight: '600', cursor: 'pointer',
-                                    boxSizing: 'border-box',
                                 }}
                             >Let's Go! 🚗</button>
 
@@ -1475,7 +1472,6 @@
                                     fontSize: '15px', fontWeight: '600', cursor: isSpinningAgain ? 'not-allowed' : 'pointer',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
                                     transition: 'opacity 0.2s', opacity: isSpinningAgain ? 0.85 : 1,
-                                    boxSizing: 'border-box',
                                 }}
                             >
                                 <span style={{ display: 'inline-block', animation: isSpinningAgain ? 'spin 0.6s linear infinite' : 'none' }}>🎲</span>
@@ -1489,9 +1485,9 @@
                                     background: 'transparent', color: '#999',
                                     border: '1px solid #e0e0e0', borderRadius: '12px',
                                     fontSize: '13px', fontWeight: '500', cursor: 'pointer',
-                                    boxSizing: 'border-box',
                                 }}
                             >Back to Main</button>
+                        </div>
                         </div>
                     </div>
                 );
@@ -1499,14 +1495,14 @@
 
             return (
                 <div style={{
-                    minHeight: '100vh',
-                    width: '100%',
-                    maxWidth: '100vw',
+                    position: 'fixed',
+                    inset: 0,
+                    overflowY: 'auto',
                     overflowX: 'hidden',
                     background: 'linear-gradient(to bottom, #FFF5EB 0%, #FFE9D6 100%)',
                     fontFamily: '"DM Sans", -apple-system, BlinkMacSystemFont, sans-serif',
                     color: '#1a1a1a',
-                    boxSizing: 'border-box',
+                    WebkitOverflowScrolling: 'touch',
                 }}>
                     {/* Header */}
                     <div style={{
@@ -2612,22 +2608,21 @@
 
                     {/* Add Restaurant Modal */}
                     {showAddModal && (
+                        <div style={{
+                            position: 'fixed', inset: 0, overflow: 'hidden', zIndex: 1000,
+                        }}>
                         <div
                             onClick={(e) => { if (e.target === e.currentTarget) resetAddModal(); }}
                             style={{
-                            position: 'fixed',
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            bottom: 0,
+                            width: '100%', height: '100%',
+                            overflowY: 'auto', overflowX: 'hidden',
+                            WebkitOverflowScrolling: 'touch',
                             background: 'rgba(0, 0, 0, 0.5)',
-                            zIndex: 1000,
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
                             padding: '16px',
                             boxSizing: 'border-box',
-                            overflowX: 'hidden',
                             animation: 'fadeIn 0.2s ease-out',
                         }}>
                             <div style={{
@@ -3209,27 +3204,36 @@
                                 ) : null}
                                 </div>{/* end scrollable content */}
                             </div>
-                        </div>
+                        </div>{/* end inner scroll layer */}
+                        </div>{/* end outer overflow:hidden */}
                     )}
 
 
                     {/* Discover Modal */}
                     {showDiscoverModal && (
-                        <div
-                            onClick={(e) => { if (e.target === e.currentTarget && !isDiscovering) setShowDiscoverModal(false); }}
-                            style={{
-                                position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)',
-                                zIndex: 2100, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                padding: '20px', animation: 'fadeIn 0.2s ease-out',
-                            }}
-                        >
+                        <div style={{
+                            position: 'fixed', inset: 0, overflow: 'hidden',
+                            zIndex: 2100,
+                        }}>
+                            <div
+                                onClick={(e) => { if (e.target === e.currentTarget && !isDiscovering) setShowDiscoverModal(false); }}
+                                style={{
+                                    width: '100%', height: '100%',
+                                    overflowY: 'auto', overflowX: 'hidden',
+                                    WebkitOverflowScrolling: 'touch',
+                                    background: 'rgba(0,0,0,0.6)',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    padding: '20px', boxSizing: 'border-box',
+                                    animation: 'fadeIn 0.2s ease-out',
+                                }}
+                            >
                             <div
                                 onClick={e => e.stopPropagation()}
                                 style={{
                                     background: 'white', borderRadius: '20px', padding: '28px',
                                     maxWidth: '420px', width: '100%', textAlign: 'center',
                                     boxShadow: '0 20px 60px rgba(0,0,0,0.3)', animation: 'slideUp 0.3s ease-out',
-                                    position: 'relative', boxSizing: 'border-box', overflowX: 'hidden',
+                                    position: 'relative',
                                 }}
                             >
                                 {!isDiscovering && (
@@ -3318,7 +3322,8 @@
                                     </>
                                 )}
                             </div>
-                        </div>
+                            </div>{/* end inner scroll layer */}
+                        </div>{/* end outer overflow:hidden */}
                     )}
 
                     {/* Duplicate Warning Modal */}
