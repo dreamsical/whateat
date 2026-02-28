@@ -1339,11 +1339,9 @@
                 };
             }, [addModalViewMode, multipleSearchResults.length, selectedSearchResult]);
 
-            // When a map pin is clicked, switch to list view and scroll selected item into view
+            // When a pin or list item is selected, scroll the list strip to show it — stay in current view mode
             useEffect(() => {
                 if (!selectedSearchResult) return;
-                // Switch to list view so the item is visible
-                if (addModalViewMode === 'map') setAddModalViewMode('list');
                 // Scroll the selected item into view inside the list container
                 setTimeout(() => {
                     if (selectedResultRef.current && addModalListRef.current) {
@@ -1357,7 +1355,7 @@
                             container.scrollTo({ top: itemTop - 8, behavior: 'smooth' });
                         }
                     }
-                }, 80); // small delay to allow list to render after view switch
+                }, 80);
             }, [selectedSearchResult]);
 
             if (view === 'result' && selectedRestaurant) {
@@ -2967,7 +2965,7 @@
                                                             }}
                                                         />
                                                         <p style={{ fontSize: '11px', color: '#aaa', textAlign: 'center', margin: 0 }}>
-                                                            Numbered pins match results below · Tap a pin to open in Maps
+                                                            Tap a pin to select · scroll list below to see details
                                                         </p>
                                                     </div>
                                                 )}
