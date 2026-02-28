@@ -5,19 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WhatEat - Restaurant Picker</title>
 
-    <!-- Styles -->
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 
-    <!-- React -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <!-- Babel for JSX transformation -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <!-- Leaflet maps -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 
-    <!-- App modules: plain JS, no JSX — load fine everywhere -->
     <script src="js/config.js"></script>
     <script src="js/utils.js"></script>
     <script src="js/icons.js"></script>
@@ -25,11 +20,27 @@
 <body>
     <div id="root"></div>
 
-    <!--
-        IMPORTANT: Must be served over http:// — NOT opened as a local file://.
-        Use VS Code Live Server extension, or push to GitHub Pages.
-        Babel cannot load external .js files on the file:// protocol.
-    -->
-    <script type="text/babel" src="js/app.js" data-presets="react"></script>
+    <script>
+        // Fetch app.js, transform JSX with Babel, then execute.
+        // Works on GitHub Pages and VS Code Live Server.
+        fetch('js/app.js')
+            .then(function(r) {
+                if (!r.ok) throw new Error('Could not load js/app.js: ' + r.status);
+                return r.text();
+            })
+            .then(function(code) {
+                var transformed = Babel.transform(code, { presets: ['react'] }).code;
+                var script = document.createElement('script');
+                script.text = transformed;
+                document.body.appendChild(script);
+            })
+            .catch(function(err) {
+                document.getElementById('root').innerHTML =
+                    '<div style="padding:40px;font-family:sans-serif;color:red">' +
+                    '<h2>Load Error</h2><p>' + err.message + '</p>' +
+                    '<p>Make sure you are serving this over http:// (VS Code Live Server or GitHub Pages), not opened as a local file.</p>' +
+                    '</div>';
+            });
+    </script>
 </body>
 </html>
