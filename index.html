@@ -18,9 +18,14 @@
                 sans-serif;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
+            overflow-x: hidden;
+        }
+        html {
+            overflow-x: hidden;
         }
         #root {
             min-height: 100vh;
+            overflow-x: hidden;
         }
         .leaflet-container {
             border-radius: 16px;
@@ -1372,6 +1377,7 @@
                         justifyContent: 'center',
                         padding: '20px',
                         boxSizing: 'border-box',
+                        overflowX: 'hidden',
                         overflowY: 'auto',
                     }}>
                         {/* Back button */}
@@ -1388,45 +1394,46 @@
 
                         <div style={{
                             background: 'white',
-                            borderRadius: '24px',
-                            padding: '32px 28px 24px',
-                            maxWidth: '400px',
+                            borderRadius: '20px',
+                            padding: '24px 20px 20px',
+                            maxWidth: '380px',
                             width: '100%',
+                            boxSizing: 'border-box',
                             textAlign: 'center',
                             boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
                             animation: 'slideUp 0.5s ease-out',
                         }}>
-                            <div style={{ fontSize: '40px', marginBottom: '8px' }}>
+                            <div style={{ fontSize: '32px', marginBottom: '6px' }}>
                                 🎲
                             </div>
-                            <div style={{ fontSize: '11px', fontWeight: '700', color: '#aaa', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '10px' }}>
+                            <div style={{ fontSize: '10px', fontWeight: '700', color: '#aaa', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>
                                 Spin Result
                             </div>
 
-                            <h2 style={{ fontSize: '26px', fontWeight: '700', marginBottom: '10px', color: '#1a1a1a' }}>
+                            <h2 style={{ fontSize: '22px', fontWeight: '700', marginBottom: '8px', color: '#1a1a1a' }}>
                                 {selectedRestaurant.name}
                             </h2>
 
                             <div style={{
-                                display: 'flex', gap: '8px', justifyContent: 'center', alignItems: 'center',
-                                marginBottom: '12px', color: '#666', fontSize: '14px', flexWrap: 'wrap',
+                                display: 'flex', gap: '6px', justifyContent: 'center', alignItems: 'center',
+                                marginBottom: '8px', color: '#666', fontSize: '13px', flexWrap: 'wrap',
                             }}>
                                 <span>{selectedRestaurant.cuisine}</span>
                                 <span>•</span><span>{selectedRestaurant.price}</span>
                                 <span>•</span>
                                 <span style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
-                                    <Star size={13} fill="#FFB800" stroke="#FFB800" />{selectedRestaurant.rating}
+                                    <Star size={12} fill="#FFB800" stroke="#FFB800" />{selectedRestaurant.rating}
                                 </span>
                             </div>
 
                             {selectedRestaurant.distance > 0 && (
-                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', color: '#667eea', fontSize: '13px', marginBottom: '12px' }}>
-                                    <MapPin size={14} />{selectedRestaurant.distance} mi away
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', color: '#667eea', fontSize: '12px', marginBottom: '8px' }}>
+                                    <MapPin size={13} />{selectedRestaurant.distance} mi away
                                 </div>
                             )}
 
                             {selectedRestaurant.address && (
-                                <div style={{ fontSize: '12px', color: '#aaa', marginBottom: '20px' }}>
+                                <div style={{ fontSize: '11px', color: '#aaa', marginBottom: '16px' }}>
                                     📍 {selectedRestaurant.address}
                                 </div>
                             )}
@@ -1434,39 +1441,41 @@
                             <button
                                 onClick={() => openInMaps(selectedRestaurant)}
                                 style={{
-                                    width: '100%', padding: '15px', marginBottom: '10px',
+                                    width: '100%', padding: '13px', marginBottom: '8px',
                                     background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                                     color: 'white', border: 'none', borderRadius: '12px',
-                                    fontSize: '16px', fontWeight: '600', cursor: 'pointer',
+                                    fontSize: '15px', fontWeight: '600', cursor: 'pointer',
+                                    boxSizing: 'border-box',
                                 }}
                             >Let's Go! 🚗</button>
 
                             <button
-                                    onClick={() => spinForRestaurant(null, true)}
-                                    disabled={isSpinningAgain}
-                                    style={{
-                                        width: '100%', padding: '15px', marginBottom: '10px',
-                                        background: isSpinningAgain
-                                            ? 'linear-gradient(135deg, #FF8E53 0%, #FF6B6B 100%)'
-                                            : 'linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%)',
-                                        color: 'white', border: 'none', borderRadius: '12px',
-                                        fontSize: '16px', fontWeight: '600', cursor: isSpinningAgain ? 'not-allowed' : 'pointer',
-                                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                                        transition: 'opacity 0.2s',
-                                        opacity: isSpinningAgain ? 0.85 : 1,
-                                    }}
-                                >
-                                    <span style={{ display: 'inline-block', animation: isSpinningAgain ? 'spin 0.6s linear infinite' : 'none' }}>🎲</span>
-                                    {isSpinningAgain ? 'Spinning…' : 'Spin Again'}
-                                </button>
+                                onClick={() => spinForRestaurant(null, true)}
+                                disabled={isSpinningAgain}
+                                style={{
+                                    width: '100%', padding: '13px', marginBottom: '8px',
+                                    background: isSpinningAgain
+                                        ? 'linear-gradient(135deg, #FF8E53 0%, #FF6B6B 100%)'
+                                        : 'linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%)',
+                                    color: 'white', border: 'none', borderRadius: '12px',
+                                    fontSize: '15px', fontWeight: '600', cursor: isSpinningAgain ? 'not-allowed' : 'pointer',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                                    transition: 'opacity 0.2s', opacity: isSpinningAgain ? 0.85 : 1,
+                                    boxSizing: 'border-box',
+                                }}
+                            >
+                                <span style={{ display: 'inline-block', animation: isSpinningAgain ? 'spin 0.6s linear infinite' : 'none' }}>🎲</span>
+                                {isSpinningAgain ? 'Spinning…' : 'Spin Again'}
+                            </button>
 
                             <button
                                 onClick={() => setView('main')}
                                 style={{
-                                    width: '100%', padding: '12px',
+                                    width: '100%', padding: '10px',
                                     background: 'transparent', color: '#999',
                                     border: '1px solid #e0e0e0', borderRadius: '12px',
-                                    fontSize: '14px', fontWeight: '500', cursor: 'pointer',
+                                    fontSize: '13px', fontWeight: '500', cursor: 'pointer',
+                                    boxSizing: 'border-box',
                                 }}
                             >Back to Main</button>
                         </div>
@@ -1477,9 +1486,13 @@
             return (
                 <div style={{
                     minHeight: '100vh',
+                    width: '100%',
+                    maxWidth: '100vw',
+                    overflowX: 'hidden',
                     background: 'linear-gradient(to bottom, #FFF5EB 0%, #FFE9D6 100%)',
                     fontFamily: '"DM Sans", -apple-system, BlinkMacSystemFont, sans-serif',
                     color: '#1a1a1a',
+                    boxSizing: 'border-box',
                 }}>
                     {/* Header */}
                     <div style={{
@@ -1718,7 +1731,7 @@
                         <div style={{
                             background: 'linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%)',
                             borderRadius: '24px',
-                            padding: '36px 20px 28px',
+                            padding: '24px 20px 20px',
                             marginBottom: '12px',
                             boxShadow: '0 10px 40px rgba(255, 107, 107, 0.3)',
                             position: 'relative',
@@ -1735,28 +1748,28 @@
 
                             {/* Random Pick heading */}
                             <h2 style={{
-                                fontSize: '32px', fontWeight: '700', color: 'white',
-                                marginBottom: '8px', fontFamily: '"Playfair Display", serif',
+                                fontSize: '26px', fontWeight: '700', color: 'white',
+                                marginBottom: '4px', fontFamily: '"Playfair Display", serif',
                             }}>
                                 Random Pick 🎲
                             </h2>
-                            <p style={{ color: 'rgba(255,255,255,0.9)', marginBottom: '24px', fontSize: '16px' }}>
+                            <p style={{ color: 'rgba(255,255,255,0.85)', marginBottom: '16px', fontSize: '14px' }}>
                                 Completely random — let fate decide
                             </p>
 
                             {/* Pool toggle */}
                             <div style={{
-                                display: 'flex', gap: '12px', marginBottom: '24px',
-                                background: 'rgba(255,255,255,0.15)', padding: '6px',
+                                display: 'flex', gap: '8px', marginBottom: '16px',
+                                background: 'rgba(255,255,255,0.15)', padding: '5px',
                                 borderRadius: '12px', backdropFilter: 'blur(10px)',
                             }}>
                                 <button
                                     onClick={() => setSpinMode('favorites')}
                                     style={{
-                                        flex: 1, padding: '12px 20px',
+                                        flex: 1, padding: '9px 16px',
                                         background: spinMode === 'favorites' ? 'white' : 'transparent',
                                         color: spinMode === 'favorites' ? '#FF6B6B' : 'white',
-                                        border: 'none', borderRadius: '8px', fontSize: '15px', fontWeight: '600',
+                                        border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: '600',
                                         cursor: 'pointer', transition: 'all 0.3s',
                                         boxShadow: spinMode === 'favorites' ? '0 2px 8px rgba(0,0,0,0.15)' : 'none',
                                     }}
@@ -1764,10 +1777,10 @@
                                 <button
                                     onClick={() => setSpinMode('nearby')}
                                     style={{
-                                        flex: 1, padding: '12px 20px',
+                                        flex: 1, padding: '9px 16px',
                                         background: spinMode === 'nearby' ? 'white' : 'transparent',
                                         color: spinMode === 'nearby' ? '#FF6B6B' : 'white',
-                                        border: 'none', borderRadius: '8px', fontSize: '15px', fontWeight: '600',
+                                        border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: '600',
                                         cursor: 'pointer', transition: 'all 0.3s',
                                         boxShadow: spinMode === 'nearby' ? '0 2px 8px rgba(0,0,0,0.15)' : 'none',
                                     }}
@@ -1780,8 +1793,8 @@
                                 disabled={isSpinning}
                                 style={{
                                     background: 'white', color: '#FF6B6B', border: 'none',
-                                    borderRadius: '16px', padding: '18px 36px',
-                                    fontSize: '18px', fontWeight: '700',
+                                    borderRadius: '14px', padding: '14px 30px',
+                                    fontSize: '17px', fontWeight: '700',
                                     cursor: isSpinning ? 'not-allowed' : 'pointer',
                                     display: 'inline-flex', alignItems: 'center', gap: '10px',
                                     boxShadow: '0 8px 20px rgba(0,0,0,0.15)',
@@ -1791,27 +1804,27 @@
                                 onMouseEnter={(e) => !isSpinning && (e.currentTarget.style.transform = 'scale(1.05)')}
                                 onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
                             >
-                                <Shuffle size={24} style={{ animation: isSpinning ? 'spin 1s linear infinite' : 'none' }} />
+                                <Shuffle size={22} style={{ animation: isSpinning ? 'spin 1s linear infinite' : 'none' }} />
                                 {isSpinning ? 'Spinning...' : 'Spin to Decide!'}
                             </button>
 
                             {isSpinning && selectedRestaurant && (
-                                <div style={{ marginTop: '20px', color: 'white', fontSize: '20px', fontWeight: '600', animation: 'pulse 0.3s ease-in-out' }}>
+                                <div style={{ marginTop: '14px', color: 'white', fontSize: '18px', fontWeight: '600', animation: 'pulse 0.3s ease-in-out' }}>
                                     {selectedRestaurant.name}
                                 </div>
                             )}
 
                             {/* Divider */}
-                            <div style={{ height: '1px', background: 'rgba(255,255,255,0.25)', margin: '24px 0 20px' }} />
+                            <div style={{ height: '1px', background: 'rgba(255,255,255,0.25)', margin: '18px 0 16px' }} />
 
                             {/* AI Discover row */}
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', textAlign: 'left' }}>
                                 <div style={{ flex: 1 }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '3px' }}>
-                                        <span style={{ fontSize: '18px' }}>✨</span>
-                                        <span style={{ fontSize: '17px', fontWeight: '700', color: 'white', fontFamily: '"Playfair Display", serif' }}>AI Discover</span>
+                                        <span style={{ fontSize: '16px' }}>✨</span>
+                                        <span style={{ fontSize: '15px', fontWeight: '700', color: 'white', fontFamily: '"Playfair Display", serif' }}>AI Discover</span>
                                     </div>
-                                    <p style={{ color: 'rgba(255,255,255,0.82)', fontSize: '13px', margin: 0, lineHeight: '1.4' }}>
+                                    <p style={{ color: 'rgba(255,255,255,0.82)', fontSize: '12px', margin: 0, lineHeight: '1.4' }}>
                                         Picks something new based on your taste
                                     </p>
                                 </div>
@@ -1821,8 +1834,8 @@
                                     style={{
                                         background: 'rgba(255,255,255,0.22)', color: 'white',
                                         border: '1.5px solid rgba(255,255,255,0.55)',
-                                        borderRadius: '12px', padding: '11px 18px',
-                                        fontSize: '14px', fontWeight: '700',
+                                        borderRadius: '12px', padding: '10px 16px',
+                                        fontSize: '13px', fontWeight: '700',
                                         cursor: isDiscovering ? 'not-allowed' : 'pointer',
                                         display: 'inline-flex', alignItems: 'center', gap: '6px',
                                         backdropFilter: 'blur(4px)',
@@ -1832,7 +1845,7 @@
                                     onMouseEnter={(e) => { if (!isDiscovering) { e.currentTarget.style.background = 'rgba(255,255,255,0.32)'; e.currentTarget.style.transform = 'scale(1.04)'; }}}
                                     onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.22)'; e.currentTarget.style.transform = 'scale(1)'; }}
                                 >
-                                    <Sparkles size={16} />
+                                    <Sparkles size={15} />
                                     {isDiscovering ? 'Analyzing…' : 'Discover'}
                                 </button>
                             </div>
@@ -1861,6 +1874,7 @@
                                     boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
                                     cursor: listFilter !== 'favorites' ? 'pointer' : 'default',
                                     transition: 'all 0.2s',
+                                    textAlign: 'center',
                                 }}
                                 onMouseEnter={(e) => {
                                     if (listFilter !== 'favorites') {
@@ -1888,6 +1902,7 @@
                                     boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
                                     cursor: 'pointer',
                                     transition: 'all 0.2s',
+                                    textAlign: 'center',
                                 }}
                                 onMouseEnter={(e) => {
                                     if (listFilter !== 'all') {
@@ -2592,6 +2607,8 @@
                             alignItems: 'center',
                             justifyContent: 'center',
                             padding: '16px',
+                            boxSizing: 'border-box',
+                            overflowX: 'hidden',
                             animation: 'fadeIn 0.2s ease-out',
                         }}>
                             <div style={{
@@ -3193,7 +3210,7 @@
                                     background: 'white', borderRadius: '20px', padding: '28px',
                                     maxWidth: '420px', width: '100%', textAlign: 'center',
                                     boxShadow: '0 20px 60px rgba(0,0,0,0.3)', animation: 'slideUp 0.3s ease-out',
-                                    position: 'relative',
+                                    position: 'relative', boxSizing: 'border-box', overflowX: 'hidden',
                                 }}
                             >
                                 {!isDiscovering && (
