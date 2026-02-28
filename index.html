@@ -10,22 +10,36 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
     <style>
-        body {
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+        html, body {
             margin: 0;
             padding: 0;
+            overflow-x: hidden;
+            max-width: 100%;
+            width: 100%;
+        }
+        body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
                 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
                 sans-serif;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
-            overflow-x: hidden;
-        }
-        html {
-            overflow-x: hidden;
+            /* Prevent horizontal swipe on iOS Safari */
+            touch-action: pan-y pinch-zoom;
+            overscroll-behavior-x: none;
         }
         #root {
             min-height: 100vh;
+            width: 100%;
+            max-width: 100%;
             overflow-x: hidden;
+            position: relative;
+        }
+        /* Prevent any fixed element from causing horizontal scroll */
+        [style*="position: fixed"], [style*="position:fixed"] {
+            max-width: 100vw;
         }
         .leaflet-container {
             border-radius: 16px;
@@ -1792,17 +1806,22 @@
                                 onClick={() => spinForRestaurant()}
                                 disabled={isSpinning}
                                 style={{
-                                    background: 'white', color: '#FF6B6B', border: 'none',
-                                    borderRadius: '14px', padding: '14px 30px',
+                                    background: 'rgba(255,255,255,0.22)',
+                                    color: 'white',
+                                    border: '2px solid rgba(255,255,255,0.6)',
+                                    borderRadius: '14px', padding: '13px 28px',
                                     fontSize: '17px', fontWeight: '700',
                                     cursor: isSpinning ? 'not-allowed' : 'pointer',
                                     display: 'inline-flex', alignItems: 'center', gap: '10px',
-                                    boxShadow: '0 8px 20px rgba(0,0,0,0.15)',
-                                    transition: 'transform 0.2s',
+                                    backdropFilter: 'blur(8px)',
+                                    WebkitBackdropFilter: 'blur(8px)',
+                                    boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
+                                    transition: 'all 0.2s',
                                     animation: isSpinning ? 'pulse 1s infinite' : 'none',
+                                    opacity: isSpinning ? 0.75 : 1,
                                 }}
-                                onMouseEnter={(e) => !isSpinning && (e.currentTarget.style.transform = 'scale(1.05)')}
-                                onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+                                onMouseEnter={(e) => !isSpinning && (e.currentTarget.style.background = 'rgba(255,255,255,0.32)')}
+                                onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.22)')}
                             >
                                 <Shuffle size={22} style={{ animation: isSpinning ? 'spin 1s linear infinite' : 'none' }} />
                                 {isSpinning ? 'Spinning...' : 'Spin to Decide!'}
@@ -1855,8 +1874,8 @@
                         <div style={{
                             display: 'grid',
                             gridTemplateColumns: '1fr 1fr',
-                            gap: '12px',
-                            marginBottom: '30px',
+                            gap: '10px',
+                            marginBottom: '20px',
                         }}>
                             <div 
                                 onClick={() => {
@@ -1869,8 +1888,8 @@
                                 style={{
                                     background: listFilter === 'favorites' ? 'linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%)' : 'white',
                                     color: listFilter === 'favorites' ? 'white' : '#1a1a1a',
-                                    borderRadius: '16px',
-                                    padding: '16px',
+                                    borderRadius: '14px',
+                                    padding: '12px',
                                     boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
                                     cursor: listFilter !== 'favorites' ? 'pointer' : 'default',
                                     transition: 'all 0.2s',
@@ -1885,10 +1904,10 @@
                                     e.currentTarget.style.transform = 'scale(1)';
                                 }}
                             >
-                                <div style={{ fontSize: '24px', fontWeight: '700', color: listFilter === 'favorites' ? 'white' : '#FF6B6B' }}>
+                                <div style={{ fontSize: '20px', fontWeight: '700', color: listFilter === 'favorites' ? 'white' : '#FF6B6B' }}>
                                     {filteredFavoritesCount}
                                 </div>
-                                <div style={{ fontSize: '14px', color: listFilter === 'favorites' ? 'rgba(255,255,255,0.9)' : '#666' }}>
+                                <div style={{ fontSize: '12px', color: listFilter === 'favorites' ? 'rgba(255,255,255,0.9)' : '#666' }}>
                                     Favorites{favHasFilter ? ' *' : ''}
                                 </div>
                             </div>
@@ -1897,8 +1916,8 @@
                                 style={{
                                     background: listFilter === 'all' ? 'linear-gradient(135deg, #FF8E53 0%, #FFB366 100%)' : 'white',
                                     color: listFilter === 'all' ? 'white' : '#1a1a1a',
-                                    borderRadius: '16px',
-                                    padding: '16px',
+                                    borderRadius: '14px',
+                                    padding: '12px',
                                     boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
                                     cursor: 'pointer',
                                     transition: 'all 0.2s',
@@ -1913,10 +1932,10 @@
                                     e.currentTarget.style.transform = 'scale(1)';
                                 }}
                             >
-                                <div style={{ fontSize: '24px', fontWeight: '700', color: listFilter === 'all' ? 'white' : '#FF8E53' }}>
+                                <div style={{ fontSize: '20px', fontWeight: '700', color: listFilter === 'all' ? 'white' : '#FF8E53' }}>
                                     {filteredNearbyCount}
                                 </div>
-                                <div style={{ fontSize: '14px', color: listFilter === 'all' ? 'rgba(255,255,255,0.9)' : '#666' }}>
+                                <div style={{ fontSize: '12px', color: listFilter === 'all' ? 'rgba(255,255,255,0.9)' : '#666' }}>
                                     Nearby{nearbyHasFilter ? ' *' : ''}
                                 </div>
                             </div>
