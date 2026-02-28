@@ -1360,7 +1360,7 @@
                 }, 80); // small delay to allow list to render after view switch
             }, [selectedSearchResult]);
 
-
+            if (view === 'result' && selectedRestaurant) {
                 const isSpin = resultSource === 'spin';
                 const isWizard = resultSource === 'wizard';
                 return (
