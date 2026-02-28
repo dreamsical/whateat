@@ -19,7 +19,7 @@
 
 // ── Google Places API ─────────────────────────────────────────
 // Replace with your restricted key. See note above.
-const GOOGLE_PLACES_API_KEY = 'YOUR_GOOGLE_PLACES_API_KEY_HERE';
+const GOOGLE_PLACES_API_KEY = 'AIzaSyBe9YWuTJgvHDkbrH_8fRqICEYhi5HBmKI';
 
 // ── Anthropic API ─────────────────────────────────────────────
 // DO NOT paste your real Anthropic key here.
