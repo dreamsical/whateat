@@ -48,6 +48,10 @@ function RestaurantApp() {
     const [nearbyFilters, setNearbyFilters] = useState(EMPTY_FILTERS);
     const [showListFilters, setShowListFilters] = useState(false);
     const [blacklist, setBlacklist] = useState([]); // array of place names to permanently hide
+    const [searchLocation, setSearchLocation] = useState(null); // {lat, lng, label} override
+    const [isGeocodingLocation, setIsGeocodingLocation] = useState(false);
+    const [locationSearchInput, setLocationSearchInput] = useState('');
+    const [locationSearchError, setLocationSearchError] = useState(null);
 
     // Convenience: active filters = whichever view is open
     const activeFilters = listFilter === 'favorites' ? favFilters : nearbyFilters;
@@ -78,6 +82,7 @@ function RestaurantApp() {
     const addModalListRef = useRef(null);       // scrollable results list container
     const selectedResultRef = useRef(null);     // currently-selected result item
     const selectionFromMapRef = useRef(false);  // true when selection was triggered by a map pin tap
+    const realUserLocationRef = useRef(null);   // always holds real GPS coords even when searchLocation is set
     const [addModalViewMode, setAddModalViewMode] = useState('list'); // 'list' or 'map'
     const [showDuplicateWarning, setShowDuplicateWarning] = useState(false);
     const [duplicateName, setDuplicateName] = useState('');
@@ -195,6 +200,13 @@ function RestaurantApp() {
         }
     }, [userLocation]);
 
+    // Re-fetch when searchLocation override changes (set or cleared)
+    useEffect(() => {
+        if (searchLocation) {
+            fetchNearbyRestaurants();
+        }
+    }, [searchLocation]);
+
     // Recalculate distances for all saved favorites whenever location updates.
     // Favorites store the distance from when they were added — this keeps them current.
     useEffect(() => {
@@ -222,6 +234,45 @@ function RestaurantApp() {
         setBlacklist(prev => prev.includes(name) ? prev : [...prev, name]);
     };
 
+    // Geocode a user-typed address/zip/city and set it as the search location override
+    const geocodeAndSearchLocation = async (query) => {
+        if (!query.trim()) return;
+        setIsGeocodingLocation(true);
+        setLocationSearchError(null);
+        try {
+            const url = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&q='
+                + encodeURIComponent(query.trim());
+            const resp = await fetch(url, { headers: { 'Accept-Language': 'en' } });
+            const data = await resp.json();
+            if (!data || data.length === 0) {
+                setLocationSearchError('No location found. Try a different address or zip code.');
+                setIsGeocodingLocation(false);
+                return;
+            }
+            const { lat, lon, display_name } = data[0];
+            // Use the first two parts of the display name as a short label (e.g. "Sunnyvale, California")
+            const label = display_name.split(',').slice(0, 2).join(',').trim();
+            const newLocation = { lat: parseFloat(lat), lng: parseFloat(lon), label };
+            setSearchLocation(newLocation);
+            setLocationSearchInput('');
+            // Clear cache and re-fetch nearby for the new location
+            setLastNearbyFetch(null);
+            setNearbyRestaurants([]);
+        } catch (e) {
+            setLocationSearchError('Could not connect. Check your internet connection.');
+        }
+        setIsGeocodingLocation(false);
+    };
+
+    // Clear the location override and return to real GPS
+    const clearSearchLocation = () => {
+        setSearchLocation(null);
+        setLocationSearchInput('');
+        setLocationSearchError(null);
+        setLastNearbyFetch(null);
+        setNearbyRestaurants([]);
+    };
+
     // Get user's location using HTML5 Geolocation API
     const getUserLocation = () => {
         if (!("geolocation" in navigator)) {
@@ -232,10 +283,12 @@ function RestaurantApp() {
         navigator.geolocation.getCurrentPosition(
             (position) => {
                 setLocationError(null);
-                setUserLocation({
+                const coords = {
                     lat: position.coords.latitude,
                     lng: position.coords.longitude
-                });
+                };
+                realUserLocationRef.current = coords;
+                setUserLocation(coords);
             },
             (error) => {
                 console.log("Location error:", error.code, error.message);
@@ -268,7 +321,9 @@ function RestaurantApp() {
 
     // Fetch nearby restaurants from Google Places
     const fetchNearbyRestaurants = async () => {
-        if (!userLocation) return;
+        // Use custom search location if set, otherwise fall back to real GPS
+        const locationToUse = searchLocation || userLocation;
+        if (!locationToUse) return;
 
         // Check cache - don't refetch if we fetched within last hour
         if (lastNearbyFetch && (Date.now() - lastNearbyFetch < 3600000)) {
@@ -293,8 +348,8 @@ function RestaurantApp() {
                     locationRestriction: {
                         circle: {
                             center: {
-                                latitude: userLocation.lat,
-                                longitude: userLocation.lng
+                                latitude: locationToUse.lat,
+                                longitude: locationToUse.lng
                             },
                             radius: 3218.69 // 2 miles in meters
                         }
@@ -338,8 +393,8 @@ function RestaurantApp() {
 
                 const nearby = filtered.map((place, index) => {
                     const distance = calculateDistance(
-                        userLocation.lat,
-                        userLocation.lng,
+                        locationToUse.lat,
+                        locationToUse.lng,
                         place.location.latitude,
                         place.location.longitude
                     );
@@ -1123,9 +1178,10 @@ function RestaurantApp() {
     useEffect(() => {
         if (listViewMode !== 'map' || !mapRef.current) return;
 
-        // Center point: user location or first restaurant
-        const center = userLocation
-            ? [userLocation.lat, userLocation.lng]
+        // Center on search location if overriding, otherwise real GPS, otherwise first restaurant
+        const locationForCenter = searchLocation || userLocation;
+        const center = locationForCenter
+            ? [locationForCenter.lat, locationForCenter.lng]
             : mapRestaurants.length > 0
                 ? [mapRestaurants[0].lat, mapRestaurants[0].lng]
                 : [37.7749, -122.4194];
@@ -1146,17 +1202,31 @@ function RestaurantApp() {
             maxZoom: 19,
         }).addTo(map);
 
-        // User location marker (blue)
-        if (userLocation) {
+        // Real GPS blue dot — always shows actual device location (even when browsing elsewhere)
+        const realGps = realUserLocationRef.current;
+        if (realGps) {
             const userIcon = L.divIcon({
                 html: '<div style="width:16px;height:16px;background:#4A90E2;border:3px solid white;border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,0.4)"></div>',
                 className: '',
                 iconSize: [16, 16],
                 iconAnchor: [8, 8],
             });
-            L.marker([userLocation.lat, userLocation.lng], { icon: userIcon })
+            L.marker([realGps.lat, realGps.lng], { icon: userIcon })
                 .addTo(map)
                 .bindPopup('<b style="font-family:sans-serif">📍 You are here</b>');
+        }
+
+        // Search-location crosshair pin — shown when browsing a custom location
+        if (searchLocation) {
+            const searchIcon = L.divIcon({
+                html: '<div style="width:22px;height:22px;background:#FF6B6B;border:3px solid white;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;box-shadow:0 2px 8px rgba(0,0,0,0.4)">📍</div>',
+                className: '',
+                iconSize: [22, 22],
+                iconAnchor: [11, 11],
+            });
+            L.marker([searchLocation.lat, searchLocation.lng], { icon: searchIcon })
+                .addTo(map)
+                .bindPopup(`<b style="font-family:sans-serif">🔍 Searching near: ${searchLocation.label}</b>`);
         }
 
         // Restaurant markers with clickable Google Maps links

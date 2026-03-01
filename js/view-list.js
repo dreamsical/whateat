@@ -46,6 +46,94 @@
                         )}
                     </div>
                 </div>
+
+                {/* Location search bar — only shown in Nearby view */}
+                {listFilter === 'all' && (
+                    <div style={{ marginBottom: '12px' }}>
+                        {/* Active override pill */}
+                        {searchLocation ? (
+                            <div style={{
+                                display: 'flex', alignItems: 'center', gap: '8px',
+                                background: '#FFF0EB', border: '1.5px solid #FF8E53',
+                                borderRadius: '10px', padding: '8px 12px',
+                            }}>
+                                <span style={{ fontSize: '14px' }}>🔍</span>
+                                <span style={{ fontSize: '13px', fontWeight: '600', color: '#FF6B6B', flex: 1 }}>
+                                    {searchLocation.label}
+                                </span>
+                                <button
+                                    onClick={clearSearchLocation}
+                                    title="Return to my location"
+                                    style={{
+                                        background: 'transparent', border: 'none', cursor: 'pointer',
+                                        color: '#FF6B6B', fontSize: '18px', padding: 0, lineHeight: 1,
+                                        fontWeight: '700',
+                                    }}
+                                >×</button>
+                            </div>
+                        ) : (
+                            /* Search input */
+                            <div style={{
+                                display: 'flex', gap: '8px', alignItems: 'center',
+                            }}>
+                                <div style={{
+                                    flex: 1, display: 'flex', alignItems: 'center',
+                                    background: '#f5f5f5', borderRadius: '10px',
+                                    padding: '0 12px', gap: '6px',
+                                }}>
+                                    <span style={{ fontSize: '14px', flexShrink: 0 }}>📍</span>
+                                    <input
+                                        type="text"
+                                        value={locationSearchInput}
+                                        onChange={(e) => {
+                                            setLocationSearchInput(e.target.value);
+                                            setLocationSearchError(null);
+                                        }}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter') geocodeAndSearchLocation(locationSearchInput);
+                                        }}
+                                        placeholder="Search by city, zip, or address…"
+                                        style={{
+                                            flex: 1, border: 'none', background: 'transparent',
+                                            fontSize: '13px', padding: '9px 0', outline: 'none',
+                                            color: '#333',
+                                        }}
+                                    />
+                                    {locationSearchInput.length > 0 && (
+                                        <button
+                                            onClick={() => { setLocationSearchInput(''); setLocationSearchError(null); }}
+                                            style={{
+                                                background: 'transparent', border: 'none',
+                                                cursor: 'pointer', color: '#aaa', fontSize: '16px',
+                                                padding: 0, lineHeight: 1, flexShrink: 0,
+                                            }}
+                                        >×</button>
+                                    )}
+                                </div>
+                                <button
+                                    onClick={() => geocodeAndSearchLocation(locationSearchInput)}
+                                    disabled={isGeocodingLocation || !locationSearchInput.trim()}
+                                    style={{
+                                        background: locationSearchInput.trim() ? 'linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%)' : '#eee',
+                                        color: locationSearchInput.trim() ? 'white' : '#bbb',
+                                        border: 'none', borderRadius: '10px',
+                                        padding: '9px 14px', fontSize: '13px', fontWeight: '700',
+                                        cursor: locationSearchInput.trim() ? 'pointer' : 'default',
+                                        transition: 'all 0.2s', flexShrink: 0,
+                                        opacity: isGeocodingLocation ? 0.6 : 1,
+                                    }}
+                                >
+                                    {isGeocodingLocation ? '…' : 'Go'}
+                                </button>
+                            </div>
+                        )}
+                        {locationSearchError && (
+                            <p style={{ margin: '6px 0 0', fontSize: '12px', color: '#e44', padding: '0 2px' }}>
+                                {locationSearchError}
+                            </p>
+                        )}
+                    </div>
+                )}
                 <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
                     <div style={{ display: 'flex', background: '#f5f5f5', borderRadius: '10px', padding: '3px', gap: '2px' }}>
                         <button
@@ -382,9 +470,10 @@
                                     {userLocation && (
                                         <button
                                             onClick={() => {
-                                                if (leafletMapRef.current && userLocation) {
+                                                const target = realUserLocationRef.current || userLocation;
+                                                if (leafletMapRef.current && target) {
                                                     leafletMapRef.current.flyTo(
-                                                        [userLocation.lat, userLocation.lng], 15,
+                                                        [target.lat, target.lng], 15,
                                                         { animate: true, duration: 0.8 }
                                                     );
                                                 }
