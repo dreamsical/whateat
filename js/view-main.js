@@ -2,9 +2,10 @@
     return (
         <div style={{
             position: 'fixed',
-            inset: 0,
-            width: '100%',
-            maxWidth: '100vw',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
             overflowY: 'auto',
             overflowX: 'hidden',
             overscrollBehavior: 'none',

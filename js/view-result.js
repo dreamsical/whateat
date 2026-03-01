@@ -4,10 +4,11 @@
         return (
             <div style={{
                 position: 'fixed',
-                inset: 0,
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
                 overflow: 'hidden',
-                maxWidth: '100vw',
-                width: '100%',
                 fontFamily: '"DM Sans", -apple-system, BlinkMacSystemFont, sans-serif',
             }}>
                 <button
@@ -33,14 +34,14 @@
                     flexDirection: 'column',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    padding: '64px 20px 20px',
+                    padding: '64px 32px 32px',
                     boxSizing: 'border-box',
                 }}>
                 <div style={{
                     background: 'white',
                     borderRadius: '20px',
                     padding: '24px 20px 20px',
-                    maxWidth: '380px',
+                    maxWidth: '340px',
                     width: '100%',
                     textAlign: 'center',
                     boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
