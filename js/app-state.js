@@ -86,6 +86,36 @@ function RestaurantApp() {
         setTimeout(() => setShowSaveToast(false), 2000);
     };
 
+    // Block horizontal swipe/pan on iOS Safari at the touch event level.
+    // CSS overflow-x:hidden alone is not enough — iOS Safari still allows
+    // the document to pan horizontally during touch gestures.
+    useEffect(() => {
+        let startX = 0;
+        let startY = 0;
+
+        const onTouchStart = (e) => {
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+        };
+
+        const onTouchMove = (e) => {
+            const dx = Math.abs(e.touches[0].clientX - startX);
+            const dy = Math.abs(e.touches[0].clientY - startY);
+            // If horizontal movement dominates, block the event
+            if (dx > dy) {
+                e.preventDefault();
+            }
+        };
+
+        document.addEventListener('touchstart', onTouchStart, { passive: true });
+        document.addEventListener('touchmove', onTouchMove, { passive: false });
+
+        return () => {
+            document.removeEventListener('touchstart', onTouchStart);
+            document.removeEventListener('touchmove', onTouchMove);
+        };
+    }, []);
+
     // Initialize data from localStorage on mount
     useEffect(() => {
         const savedLikes = loadFromStorage(STORAGE_KEYS.LIKES, []);

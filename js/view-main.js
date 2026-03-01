@@ -8,6 +8,7 @@
             overflowY: 'auto',
             overflowX: 'hidden',
             overscrollBehavior: 'none',
+            touchAction: 'pan-y',
             background: 'linear-gradient(to bottom, #FFF5EB 0%, #FFE9D6 100%)',
             fontFamily: '"DM Sans", -apple-system, BlinkMacSystemFont, sans-serif',
             color: '#1a1a1a',
