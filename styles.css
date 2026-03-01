@@ -42,11 +42,22 @@ body {
     position: relative;
 }
 
-/* Ensure every fixed/absolute overlay can't widen the page */
-[style*="position: fixed"],
-[style*="position:fixed"] {
-    max-width: 100vw;
+/* ============================================================
+   Mobile Horizontal Overflow Prevention
+   Root cause: left:50% + translateX(-50%) creates invisible
+   scroll space. Fix is to use flex centering on a full-width
+   wrapper instead. These rules add a safety net.
+   ============================================================ */
+
+html, body {
+    /* Hard stop — nothing can make the page wider than the screen */
+    max-width: 100%;
     overflow-x: hidden;
+}
+
+/* Any position:fixed element must not exceed viewport width */
+body > * {
+    max-width: 100vw;
 }
 
 .leaflet-container {
@@ -82,11 +93,11 @@ body {
 @keyframes slideUpFade {
     from {
         opacity: 0;
-        transform: translateX(-50%) translateY(10px);
+        transform: translateY(10px);
     }
     to {
         opacity: 1;
-        transform: translateX(-50%) translateY(0);
+        transform: translateY(0);
     }
 }
 

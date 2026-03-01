@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Overflow Diagnostic</title>
+<style>
+  * { outline: 1px solid rgba(255,0,0,0.3) !important; }
+  body { margin: 0; font-family: sans-serif; padding: 16px; }
+  h2 { color: #333; }
+  #results { margin-top: 16px; }
+  .bad { background: #ffe0e0; border: 2px solid red; padding: 8px; margin: 4px 0; border-radius: 4px; font-size: 13px; font-family: monospace; }
+  .ok { background: #e0ffe0; padding: 4px 8px; border-radius: 4px; font-size: 13px; }
+</style>
+</head>
+<body>
+<h2>🔍 Overflow Diagnostic</h2>
+<p>Open this page in DevTools mobile view. Red outlines show every element. Any element whose right edge exceeds the viewport is listed below.</p>
+<div id="results">Running...</div>
+<script>
+  var vw = document.documentElement.clientWidth;
+  var results = document.getElementById('results');
+  var all = document.querySelectorAll('*');
+  var bad = [];
+  all.forEach(function(el) {
+    var rect = el.getBoundingClientRect();
+    if (rect.right > vw + 1) {
+      var tag = el.tagName.toLowerCase();
+      var cls = el.className ? '.' + el.className.toString().trim().replace(/\s+/g,'.')  : '';
+      var id  = el.id ? '#' + el.id : '';
+      var w   = Math.round(rect.width);
+      var r   = Math.round(rect.right);
+      bad.push('<div class="bad">⚠️ <b>' + tag + id + cls + '</b> — width: ' + w + 'px, right edge: ' + r + 'px (viewport: ' + vw + 'px)<br><small>' + (el.outerHTML.substring(0,120)) + '</small></div>');
+    }
+  });
+  if (bad.length === 0) {
+    results.innerHTML = '<div class="ok">✅ No overflow detected at current viewport width (' + vw + 'px)</div>';
+  } else {
+    results.innerHTML = '<p><b>' + bad.length + ' overflowing element(s):</b></p>' + bad.join('');
+  }
+</script>
+</body>
+</html>
