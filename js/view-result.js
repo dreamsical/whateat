@@ -6,6 +6,8 @@
                 position: 'fixed',
                 inset: 0,
                 overflow: 'hidden',
+                maxWidth: '100vw',
+                width: '100%',
                 fontFamily: '"DM Sans", -apple-system, BlinkMacSystemFont, sans-serif',
             }}>
                 <button
@@ -23,7 +25,9 @@
                     height: '100%',
                     overflowY: 'auto',
                     overflowX: 'hidden',
+                    maxWidth: '100vw',
                     WebkitOverflowScrolling: 'touch',
+                    overscrollBehavior: 'none',
                     background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                     display: 'flex',
                     flexDirection: 'column',

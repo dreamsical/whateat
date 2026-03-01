@@ -1,12 +1,15 @@
             {showAddModal && (
                 <div style={{
                     position: 'fixed', inset: 0, overflow: 'hidden', zIndex: 1000,
+                    width: '100%', maxWidth: '100vw',
                 }}>
                 <div
                     onClick={(e) => { if (e.target === e.currentTarget) resetAddModal(); }}
                     style={{
                     width: '100%', height: '100%',
+                    maxWidth: '100vw',
                     overflowY: 'auto', overflowX: 'hidden',
+                    overscrollBehavior: 'none',
                     WebkitOverflowScrolling: 'touch',
                     background: 'rgba(0, 0, 0, 0.5)',
                     display: 'flex',

@@ -3,8 +3,11 @@
         <div style={{
             position: 'fixed',
             inset: 0,
+            width: '100%',
+            maxWidth: '100vw',
             overflowY: 'auto',
             overflowX: 'hidden',
+            overscrollBehavior: 'none',
             background: 'linear-gradient(to bottom, #FFF5EB 0%, #FFE9D6 100%)',
             fontFamily: '"DM Sans", -apple-system, BlinkMacSystemFont, sans-serif',
             color: '#1a1a1a',
@@ -71,12 +74,16 @@
                     left: 0,
                     right: 0,
                     bottom: 0,
+                    width: '100%',
+                    maxWidth: '100vw',
+                    overflow: 'hidden',
                     background: 'rgba(0, 0, 0, 0.5)',
                     zIndex: 1000,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     padding: '20px',
+                    boxSizing: 'border-box',
                     animation: 'fadeIn 0.2s ease-out',
                 }}>
                     <div style={{
