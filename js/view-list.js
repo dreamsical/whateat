@@ -368,16 +368,48 @@
                             </div>
                         ) : (
                             <>
-                                <div
-                                    ref={mapRef}
-                                    style={{
-                                        width: '100%',
-                                        height: '380px',
-                                        borderRadius: '16px',
-                                        boxShadow: '0 4px 16px rgba(0,0,0,0.1)',
-                                        overflow: 'hidden',
-                                    }}
-                                />
+                                <div style={{ position: 'relative' }}>
+                                    <div
+                                        ref={mapRef}
+                                        style={{
+                                            width: '100%',
+                                            height: '380px',
+                                            borderRadius: '16px',
+                                            boxShadow: '0 4px 16px rgba(0,0,0,0.1)',
+                                            overflow: 'hidden',
+                                        }}
+                                    />
+                                    {userLocation && (
+                                        <button
+                                            onClick={() => {
+                                                if (leafletMapRef.current && userLocation) {
+                                                    leafletMapRef.current.flyTo(
+                                                        [userLocation.lat, userLocation.lng], 15,
+                                                        { animate: true, duration: 0.8 }
+                                                    );
+                                                }
+                                            }}
+                                            title="Go to my location"
+                                            style={{
+                                                position: 'absolute',
+                                                bottom: '12px',
+                                                right: '12px',
+                                                zIndex: 1000,
+                                                width: '40px',
+                                                height: '40px',
+                                                borderRadius: '10px',
+                                                background: 'white',
+                                                border: 'none',
+                                                boxShadow: '0 2px 10px rgba(0,0,0,0.25)',
+                                                cursor: 'pointer',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                fontSize: '20px',
+                                            }}
+                                        >🎯</button>
+                                    )}
+                                </div>
                                 <div style={{
                                     display: 'flex',
                                     gap: '12px',
@@ -387,7 +419,7 @@
                                     justifyContent: 'center',
                                     flexWrap: 'wrap',
                                 }}>
-                                    {userLocation && <span>🔵 You</span>}
+                                    {userLocation && <span>🔵 You &nbsp;·&nbsp; 🎯 Go to me</span>}
                                     {listFilter === 'favorites' ? <span>❤️ Favorite</span> : <span>🍽️ Nearby</span>}
                                     <span style={{ color: '#aaa' }}>Tap a pin → Open in Maps</span>
                                 </div>
