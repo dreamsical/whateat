@@ -89,16 +89,27 @@ function RestaurantApp() {
     // Block horizontal swipe/pan on iOS Safari at the touch event level.
     // CSS overflow-x:hidden alone is not enough — iOS Safari still allows
     // the document to pan horizontally during touch gestures.
+    // Also blocks pinch-to-zoom since Android Chrome ignores user-scalable=no.
     useEffect(() => {
         let startX = 0;
         let startY = 0;
 
         const onTouchStart = (e) => {
+            // Block pinch-to-zoom (2+ fingers)
+            if (e.touches.length > 1) {
+                e.preventDefault();
+                return;
+            }
             startX = e.touches[0].clientX;
             startY = e.touches[0].clientY;
         };
 
         const onTouchMove = (e) => {
+            // Block pinch-to-zoom (2+ fingers)
+            if (e.touches.length > 1) {
+                e.preventDefault();
+                return;
+            }
             const dx = Math.abs(e.touches[0].clientX - startX);
             const dy = Math.abs(e.touches[0].clientY - startY);
             // If horizontal movement dominates, block the event
@@ -107,12 +118,19 @@ function RestaurantApp() {
             }
         };
 
-        document.addEventListener('touchstart', onTouchStart, { passive: true });
+        // gesturestart/gesturechange are Safari-specific pinch events
+        const onGesture = (e) => { e.preventDefault(); };
+
+        document.addEventListener('touchstart', onTouchStart, { passive: false });
         document.addEventListener('touchmove', onTouchMove, { passive: false });
+        document.addEventListener('gesturestart', onGesture, { passive: false });
+        document.addEventListener('gesturechange', onGesture, { passive: false });
 
         return () => {
             document.removeEventListener('touchstart', onTouchStart);
             document.removeEventListener('touchmove', onTouchMove);
+            document.removeEventListener('gesturestart', onGesture);
+            document.removeEventListener('gesturechange', onGesture);
         };
     }, []);
 
