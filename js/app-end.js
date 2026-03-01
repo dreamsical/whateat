@@ -43,8 +43,16 @@
                 <div style={{
                     position: 'fixed',
                     bottom: '20px',
-                    left: '50%',
-                    transform: 'translateX(-50%)',
+                    left: 0,
+                    right: 0,
+                    width: '100%',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    pointerEvents: 'none',
+                    zIndex: 2000,
+                    animation: 'slideUpFade 0.3s ease-out',
+                }}>
+                <div style={{
                     background: '#2D3748',
                     color: 'white',
                     padding: '12px 24px',
@@ -52,14 +60,14 @@
                     fontSize: '14px',
                     fontWeight: '500',
                     boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-                    zIndex: 2000,
-                    animation: 'slideUpFade 0.3s ease-out',
+                    pointerEvents: 'auto',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '8px',
                 }}>
                     <span>✓</span>
                     <span>Saved to your preferences</span>
+                </div>
                 </div>
             )}
 
@@ -89,11 +97,11 @@
                 @keyframes slideUpFade {
                     from {
                         opacity: 0;
-                        transform: translateX(-50%) translateY(10px);
+                        transform: translateY(10px);
                     }
                     to {
                         opacity: 1;
-                        transform: translateX(-50%) translateY(0);
+                        transform: translateY(0);
                     }
                 }
 
