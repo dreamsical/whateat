@@ -634,6 +634,29 @@
                                         stroke={restaurant.liked ? '#FF6B6B' : '#ddd'}
                                     />
                                 </button>
+                                {listFilter === 'all' && (
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            if (window.confirm(`Hide "${restaurant.name}" forever? It won't appear in your Nearby list, Spin, or Discover.`)) {
+                                                blacklistRestaurant(restaurant.name);
+                                            }
+                                        }}
+                                        title="Never show again"
+                                        style={{
+                                            background: 'transparent',
+                                            border: 'none',
+                                            cursor: 'pointer',
+                                            padding: '8px',
+                                            transition: 'transform 0.2s',
+                                            color: '#ccc',
+                                            fontSize: '18px',
+                                            lineHeight: 1,
+                                        }}
+                                        onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.2)'; e.currentTarget.style.color = '#ff4444'; }}
+                                        onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.color = '#ccc'; }}
+                                    >🚫</button>
+                                )}
                             </div>
                         ))}
                     </div>

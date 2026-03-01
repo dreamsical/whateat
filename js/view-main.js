@@ -202,6 +202,44 @@
                         >
                             Clear All Data
                         </button>
+
+                        {blacklist.length > 0 && (
+                            <div style={{
+                                marginTop: '16px',
+                                background: '#f8f8f8',
+                                borderRadius: '12px',
+                                padding: '16px',
+                            }}>
+                                <h3 style={{ fontSize: '15px', fontWeight: '600', margin: '0 0 10px', color: '#444' }}>
+                                    🚫 Hidden Restaurants ({blacklist.length})
+                                </h3>
+                                <p style={{ fontSize: '12px', color: '#999', margin: '0 0 10px' }}>
+                                    These won't appear in Nearby, Spin, or Discover. Tap × to restore.
+                                </p>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                    {blacklist.map(name => (
+                                        <div key={name} style={{
+                                            display: 'flex', alignItems: 'center',
+                                            justifyContent: 'space-between',
+                                            background: 'white', borderRadius: '8px',
+                                            padding: '8px 12px',
+                                            fontSize: '13px', color: '#555',
+                                        }}>
+                                            <span>{name}</span>
+                                            <button
+                                                onClick={() => setBlacklist(prev => prev.filter(n => n !== name))}
+                                                style={{
+                                                    background: 'transparent', border: 'none',
+                                                    cursor: 'pointer', color: '#aaa',
+                                                    fontSize: '16px', padding: '0 0 0 8px',
+                                                    lineHeight: 1,
+                                                }}
+                                            >×</button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}

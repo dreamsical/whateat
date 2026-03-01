@@ -19,7 +19,7 @@
 
 // ── Google Places API ─────────────────────────────────────────
 // Replace with your restricted key. See note above.
-const GOOGLE_PLACES_API_KEY = 'AIzaSyBe9YWuTJgvHDkbrH_8fRqICEYhi5HBmKI';
+const GOOGLE_PLACES_API_KEY = 'YOUR_GOOGLE_PLACES_API_KEY_HERE';
 
 // ── Anthropic API ─────────────────────────────────────────────
 // DO NOT paste your real Anthropic key here.
@@ -44,6 +44,7 @@ const STORAGE_KEYS = {
     INTERACTION_HISTORY: 'foodspin_interactions',
     USER_PREFERENCES:    'foodspin_preferences',
     CUSTOM_RESTAURANTS:  'foodspin_custom_restaurants',
+    BLACKLIST:           'foodspin_blacklist',
 };
 
 // ── Cuisine → parent cuisine mapping ─────────────────────────

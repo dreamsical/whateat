@@ -47,6 +47,7 @@ function RestaurantApp() {
     const [favFilters, setFavFilters] = useState(EMPTY_FILTERS);
     const [nearbyFilters, setNearbyFilters] = useState(EMPTY_FILTERS);
     const [showListFilters, setShowListFilters] = useState(false);
+    const [blacklist, setBlacklist] = useState([]); // array of place names to permanently hide
 
     // Convenience: active filters = whichever view is open
     const activeFilters = listFilter === 'favorites' ? favFilters : nearbyFilters;
@@ -193,6 +194,33 @@ function RestaurantApp() {
             fetchNearbyRestaurants();
         }
     }, [userLocation]);
+
+    // Recalculate distances for all saved favorites whenever location updates.
+    // Favorites store the distance from when they were added — this keeps them current.
+    useEffect(() => {
+        if (!userLocation) return;
+        setRestaurants(prev => prev.map(r => {
+            if (!r.lat || !r.lng) return r;
+            const d = calculateDistance(userLocation.lat, userLocation.lng, r.lat, r.lng);
+            return { ...r, distance: Math.round(d * 10) / 10 };
+        }));
+    }, [userLocation]);
+
+    // Load blacklist from localStorage on mount
+    useEffect(() => {
+        const saved = loadFromStorage(STORAGE_KEYS.BLACKLIST, []);
+        setBlacklist(saved);
+    }, []);
+
+    // Persist blacklist to localStorage whenever it changes
+    useEffect(() => {
+        saveToStorage(STORAGE_KEYS.BLACKLIST, blacklist);
+    }, [blacklist]);
+
+    // Blacklist a nearby restaurant by name — hides it from list, spin, and discover
+    const blacklistRestaurant = (name) => {
+        setBlacklist(prev => prev.includes(name) ? prev : [...prev, name]);
+    };
 
     // Get user's location using HTML5 Geolocation API
     const getUserLocation = () => {
@@ -391,9 +419,11 @@ function RestaurantApp() {
         setDiscoverRec(null);
         setShowDiscoverModal(true);
 
-        // Candidates = nearby not already favorited (and not the one we just showed)
+        // Candidates = nearby not already favorited, not blacklisted, and not the one we just showed
         const favNames = new Set(favorites.map(r => r.name.toLowerCase()));
-        let candidates = nearbyRestaurants.filter(r => !favNames.has(r.name.toLowerCase()));
+        let candidates = nearbyRestaurants.filter(r => 
+            !favNames.has(r.name.toLowerCase()) && !blacklist.includes(r.name)
+        );
         if (excludeName) candidates = candidates.filter(r => r.name !== excludeName);
 
         if (!candidates.length) {
@@ -483,7 +513,7 @@ function RestaurantApp() {
 
         const spinPool = poolOverride || (spinMode === 'favorites' 
             ? restaurants.filter(r => r.liked)
-            : nearbyRestaurants);
+            : nearbyRestaurants.filter(r => !blacklist.includes(r.name)));
 
         if (spinPool.length === 0) {
             alert(spinMode === 'favorites' 
@@ -989,6 +1019,11 @@ function RestaurantApp() {
         filteredRestaurants = filteredRestaurants.filter(r =>
             r.rating >= activeRatingFilter
         );
+    }
+
+    // Remove blacklisted restaurants from the nearby view
+    if (listFilter === 'all') {
+        filteredRestaurants = filteredRestaurants.filter(r => !blacklist.includes(r.name));
     }
 
     // Get total favorites count (from saved restaurants, not nearby)
