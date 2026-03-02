@@ -271,6 +271,9 @@ function RestaurantApp() {
         setLocationSearchError(null);
         setLastNearbyFetch(null);
         setNearbyRestaurants([]);
+        // Pass real GPS directly — can't rely on searchLocation state being null yet
+        const realGps = realUserLocationRef.current || userLocation;
+        if (realGps) fetchNearbyRestaurants(realGps);
     };
 
     // Get user's location using HTML5 Geolocation API
@@ -320,9 +323,9 @@ function RestaurantApp() {
     };
 
     // Fetch nearby restaurants from Google Places
-    const fetchNearbyRestaurants = async () => {
-        // Use custom search location if set, otherwise fall back to real GPS
-        const locationToUse = searchLocation || userLocation;
+    const fetchNearbyRestaurants = async (locationOverride) => {
+        // Explicit override (e.g. from clearSearchLocation) > searchLocation > real GPS
+        const locationToUse = locationOverride || searchLocation || userLocation;
         if (!locationToUse) return;
 
         // Check cache - don't refetch if we fetched within last hour
