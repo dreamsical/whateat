@@ -328,8 +328,9 @@ function RestaurantApp() {
         const locationToUse = locationOverride || searchLocation || userLocation;
         if (!locationToUse) return;
 
-        // Check cache - don't refetch if we fetched within last hour
-        if (lastNearbyFetch && (Date.now() - lastNearbyFetch < 3600000)) {
+        // Skip cache when an explicit location is passed (e.g. clearing back to real GPS)
+        // Otherwise don't refetch if we fetched within the last hour
+        if (!locationOverride && lastNearbyFetch && (Date.now() - lastNearbyFetch < 3600000)) {
             console.log("Using cached nearby restaurants");
             return;
         }
