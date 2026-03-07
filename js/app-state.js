@@ -283,29 +283,75 @@ function RestaurantApp() {
             return;
         }
         setLocationError(null);
+
+        // Stage 0: instant load from localStorage cache ──────────────────
+        // Show nearby restaurants immediately on repeat visits before any
+        // GPS call even starts.
+        const cached = loadFromStorage(STORAGE_KEYS.LAST_LOCATION, null);
+        if (cached && cached.lat && cached.lng) {
+            realUserLocationRef.current = cached;
+            setUserLocation(cached);
+            // Still fall through to refresh in background
+        }
+
+        // Stage 1: fast coarse fix (WiFi/cell, ~1-3 sec) ─────────────────
+        // enableHighAccuracy:false uses network-based positioning which
+        // resolves in 1-3 seconds on mobile. Gets the list on screen fast.
         navigator.geolocation.getCurrentPosition(
             (position) => {
-                setLocationError(null);
                 const coords = {
                     lat: position.coords.latitude,
-                    lng: position.coords.longitude
+                    lng: position.coords.longitude,
                 };
                 realUserLocationRef.current = coords;
-                setUserLocation(coords);
+                saveToStorage(STORAGE_KEYS.LAST_LOCATION, coords);
+                setLocationError(null);
+
+                setUserLocation(prev => {
+                    if (prev) {
+                        const delta = Math.abs(prev.lat - coords.lat) + Math.abs(prev.lng - coords.lng);
+                        if (delta < 0.0015) return prev;
+                        setLastNearbyFetch(null);
+                    }
+                    return coords;
+                });
+
+                // Stage 2: silent high-accuracy follow-up ─────────────────
+                // After the coarse fix is showing, request a precise GPS fix
+                // in the background. Only updates if meaningfully different.
+                navigator.geolocation.getCurrentPosition(
+                    (precisePosition) => {
+                        const precise = {
+                            lat: precisePosition.coords.latitude,
+                            lng: precisePosition.coords.longitude,
+                        };
+                        realUserLocationRef.current = precise;
+                        saveToStorage(STORAGE_KEYS.LAST_LOCATION, precise);
+                        setUserLocation(prev => {
+                            if (prev) {
+                                const delta = Math.abs(prev.lat - precise.lat) + Math.abs(prev.lng - precise.lng);
+                                if (delta < 0.0015) return prev;
+                                setLastNearbyFetch(null);
+                            }
+                            return precise;
+                        });
+                    },
+                    () => { /* silent — coarse fix is already showing */ },
+                    { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
+                );
             },
             (error) => {
-                console.log("Location error:", error.code, error.message);
+                // Coarse fix failed — if we loaded from cache, stay silent
+                if (cached && cached.lat) return;
                 if (error.code === 1) {
                     setLocationError('denied');
                 } else if (window.location.protocol === 'file:') {
-                    // file:// works on desktop browsers but fails on mobile —
-                    // hint user to host via HTTPS for mobile access
                     setLocationError('file_protocol_mobile');
                 } else {
                     setLocationError('unavailable');
                 }
             },
-            { timeout: 10000, maximumAge: 300000 }
+            { enableHighAccuracy: false, timeout: 5000, maximumAge: 600000 }
         );
     };
 
