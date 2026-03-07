@@ -750,6 +750,40 @@
                         ))}
                     </div>
                 ) : null}
+
+                {/* Load More / exhausted — only in nearby list view */}
+                {listFilter === 'all' && listViewMode === 'list' && nearbyRestaurants.length > 0 && (
+                    <div style={{ textAlign: 'center', padding: '12px 0 4px' }}>
+                        {hasMoreNearby ? (
+                            <button
+                                onClick={loadMoreNearby}
+                                disabled={isLoadingMoreNearby}
+                                style={{
+                                    background: 'white',
+                                    border: '2px solid #FF8E53',
+                                    borderRadius: '12px',
+                                    padding: '10px 24px',
+                                    color: '#FF6B6B',
+                                    fontSize: '14px',
+                                    fontWeight: '700',
+                                    cursor: isLoadingMoreNearby ? 'not-allowed' : 'pointer',
+                                    opacity: isLoadingMoreNearby ? 0.6 : 1,
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    transition: 'all 0.2s',
+                                    boxShadow: '0 2px 8px rgba(255,107,107,0.15)',
+                                }}
+                            >
+                                {isLoadingMoreNearby ? '🔍 Finding more…' : '🔍 Load More Restaurants'}
+                            </button>
+                        ) : (
+                            <p style={{ fontSize: '13px', color: '#aaa', margin: 0 }}>
+                                No more restaurants found nearby
+                            </p>
+                        )}
+                    </div>
+                )}
             </div>
             <button
                 onClick={() => setShowAddModal(true)}

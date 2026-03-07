@@ -48,6 +48,10 @@ function RestaurantApp() {
     const [nearbyFilters, setNearbyFilters] = useState(EMPTY_FILTERS);
     const [showListFilters, setShowListFilters] = useState(false);
     const [blacklist, setBlacklist] = useState([]); // array of place names to permanently hide
+    const [seenNearbyNames, setSeenNearbyNames] = useState(new Set()); // names shown in any batch
+    const [nearbyRadiusTier, setNearbyRadiusTier] = useState(0); // index into NEARBY_RADIUS_TIERS
+    const [hasMoreNearby, setHasMoreNearby] = useState(true); // false when all tiers exhausted
+    const [isLoadingMoreNearby, setIsLoadingMoreNearby] = useState(false);
     const [searchLocation, setSearchLocation] = useState(null); // {lat, lng, label} override
     const [isGeocodingLocation, setIsGeocodingLocation] = useState(false);
     const [locationSearchInput, setLocationSearchInput] = useState('');
@@ -83,6 +87,9 @@ function RestaurantApp() {
     const selectedResultRef = useRef(null);     // currently-selected result item
     const selectionFromMapRef = useRef(false);  // true when selection was triggered by a map pin tap
     const realUserLocationRef = useRef(null);   // always holds real GPS coords even when searchLocation is set
+
+    // Radius tiers in meters: 2mi → 5mi → 10mi → 20mi
+    const NEARBY_RADIUS_TIERS = [3218, 8046, 16093, 32186];
     const [addModalViewMode, setAddModalViewMode] = useState('list'); // 'list' or 'map'
     const [showDuplicateWarning, setShowDuplicateWarning] = useState(false);
     const [duplicateName, setDuplicateName] = useState('');
@@ -234,6 +241,7 @@ function RestaurantApp() {
         setBlacklist(prev => prev.includes(name) ? prev : [...prev, name]);
     };
 
+
     // Geocode a user-typed address/zip/city and set it as the search location override
     const geocodeAndSearchLocation = async (query) => {
         if (!query.trim()) return;
@@ -255,9 +263,12 @@ function RestaurantApp() {
             const newLocation = { lat: parseFloat(lat), lng: parseFloat(lon), label };
             setSearchLocation(newLocation);
             setLocationSearchInput('');
-            // Clear cache and re-fetch nearby for the new location
+            // Reset pagination state for the new location
             setLastNearbyFetch(null);
             setNearbyRestaurants([]);
+            setSeenNearbyNames(new Set());
+            setNearbyRadiusTier(0);
+            setHasMoreNearby(true);
         } catch (e) {
             setLocationSearchError('Could not connect. Check your internet connection.');
         }
@@ -271,6 +282,9 @@ function RestaurantApp() {
         setLocationSearchError(null);
         setLastNearbyFetch(null);
         setNearbyRestaurants([]);
+        setSeenNearbyNames(new Set());
+        setNearbyRadiusTier(0);
+        setHasMoreNearby(true);
         // Pass real GPS directly — can't rely on searchLocation state being null yet
         const realGps = realUserLocationRef.current || userLocation;
         if (realGps) fetchNearbyRestaurants(realGps);
@@ -369,19 +383,28 @@ function RestaurantApp() {
     };
 
     // Fetch nearby restaurants from Google Places
-    const fetchNearbyRestaurants = async (locationOverride) => {
-        // Explicit override (e.g. from clearSearchLocation) > searchLocation > real GPS
+    // locationOverride: explicit coords to use (bypasses cache check)
+    // tierOverride: which NEARBY_RADIUS_TIERS index to use
+    // seenOverride: Set of names already shown (to de-duplicate across loads)
+    // appendMode: if true, appends to existing list instead of replacing
+    const fetchNearbyRestaurants = async (locationOverride, tierOverride, seenOverride, appendMode) => {
         const locationToUse = locationOverride || searchLocation || userLocation;
         if (!locationToUse) return;
 
-        // Skip cache when an explicit location is passed (e.g. clearing back to real GPS)
-        // Otherwise don't refetch if we fetched within the last hour
-        if (!locationOverride && lastNearbyFetch && (Date.now() - lastNearbyFetch < 3600000)) {
+        // Skip cache on explicit calls; otherwise respect 1-hour cache
+        if (!locationOverride && !appendMode && lastNearbyFetch && (Date.now() - lastNearbyFetch < 3600000)) {
             console.log("Using cached nearby restaurants");
             return;
         }
 
-        setIsLoadingNearby(true);
+        const tierIndex = tierOverride !== undefined ? tierOverride : 0;
+        const radius = NEARBY_RADIUS_TIERS[tierIndex];
+
+        if (appendMode) {
+            setIsLoadingMoreNearby(true);
+        } else {
+            setIsLoadingNearby(true);
+        }
         setNearbyApiError(null);
 
         try {
@@ -401,7 +424,7 @@ function RestaurantApp() {
                                 latitude: locationToUse.lat,
                                 longitude: locationToUse.lng
                             },
-                            radius: 3218.69 // 2 miles in meters
+                            radius: radius
                         }
                     }
                 })
@@ -415,30 +438,31 @@ function RestaurantApp() {
 
             const data = await response.json();
 
+            const FOOD_TYPES = new Set([
+                'restaurant', 'cafe', 'bakery', 'bar', 'food',
+                'american_restaurant', 'barbecue_restaurant', 'brazilian_restaurant',
+                'breakfast_restaurant', 'brunch_restaurant', 'chinese_restaurant',
+                'coffee_shop', 'fast_food_restaurant', 'french_restaurant',
+                'greek_restaurant', 'hamburger_restaurant', 'ice_cream_shop',
+                'indian_restaurant', 'indonesian_restaurant', 'italian_restaurant',
+                'japanese_restaurant', 'korean_restaurant', 'lebanese_restaurant',
+                'meal_delivery', 'meal_takeaway', 'mediterranean_restaurant',
+                'mexican_restaurant', 'middle_eastern_restaurant', 'pizza_restaurant',
+                'ramen_restaurant', 'sandwich_shop', 'seafood_restaurant',
+                'spanish_restaurant', 'steak_house', 'sushi_restaurant',
+                'thai_restaurant', 'turkish_restaurant', 'vegan_restaurant',
+                'vegetarian_restaurant', 'vietnamese_restaurant', 'wine_bar',
+                'pub', 'food_court', 'diner', 'buffet_restaurant',
+            ]);
+
             if (data.places && data.places.length > 0) {
-                // Allowlist of Google Places primaryType values that are food/drink establishments
-                const FOOD_TYPES = new Set([
-                    'restaurant', 'cafe', 'bakery', 'bar', 'food',
-                    'american_restaurant', 'barbecue_restaurant', 'brazilian_restaurant',
-                    'breakfast_restaurant', 'brunch_restaurant', 'chinese_restaurant',
-                    'coffee_shop', 'fast_food_restaurant', 'french_restaurant',
-                    'greek_restaurant', 'hamburger_restaurant', 'ice_cream_shop',
-                    'indian_restaurant', 'indonesian_restaurant', 'italian_restaurant',
-                    'japanese_restaurant', 'korean_restaurant', 'lebanese_restaurant',
-                    'meal_delivery', 'meal_takeaway', 'mediterranean_restaurant',
-                    'mexican_restaurant', 'middle_eastern_restaurant', 'pizza_restaurant',
-                    'ramen_restaurant', 'sandwich_shop', 'seafood_restaurant',
-                    'spanish_restaurant', 'steak_house', 'sushi_restaurant',
-                    'thai_restaurant', 'turkish_restaurant', 'vegan_restaurant',
-                    'vegetarian_restaurant', 'vietnamese_restaurant', 'wine_bar',
-                    'pub', 'food_court', 'diner', 'buffet_restaurant',
-                ]);
-                // Filter: if primaryType is set and NOT in our food list, exclude it
+                const alreadySeen = seenOverride || new Set();
+
                 const filtered = data.places.filter(place => {
                     const type = (place.primaryType || '').toLowerCase();
-                    // If no primaryType, allow (some restaurants may lack it)
-                    if (!type) return true;
-                    return FOOD_TYPES.has(type);
+                    if (type && !FOOD_TYPES.has(type)) return false;
+                    const name = place.displayName?.text || '';
+                    return !alreadySeen.has(name); // exclude already-shown restaurants
                 });
 
                 const nearby = filtered.map((place, index) => {
@@ -448,9 +472,8 @@ function RestaurantApp() {
                         place.location.latitude,
                         place.location.longitude
                     );
-
                     return {
-                        id: `nearby-${index + 1}`,
+                        id: `nearby-${Date.now()}-${index}`,
                         name: place.displayName?.text || "Restaurant",
                         cuisine: place.primaryTypeDisplayName?.text || "Restaurant",
                         rating: place.rating || 4.0,
@@ -464,23 +487,74 @@ function RestaurantApp() {
                     };
                 });
 
-                setNearbyRestaurants(nearby);
-                setLastNearbyFetch(Date.now());
+                if (nearby.length > 0) {
+                    // Add all fetched names (not just new ones) to seen set
+                    const newSeen = new Set(alreadySeen);
+                    data.places.forEach(p => { if (p.displayName?.text) newSeen.add(p.displayName.text); });
+                    setSeenNearbyNames(newSeen);
+
+                    if (appendMode) {
+                        setNearbyRestaurants(prev => [...prev, ...nearby]);
+                    } else {
+                        setNearbyRestaurants(nearby);
+                        // Reset seen set to just this batch on a fresh load
+                        const freshSeen = new Set();
+                        data.places.forEach(p => { if (p.displayName?.text) freshSeen.add(p.displayName.text); });
+                        setSeenNearbyNames(freshSeen);
+                    }
+                    setNearbyRadiusTier(tierIndex);
+                    setHasMoreNearby(true);
+                    setLastNearbyFetch(Date.now());
+                } else {
+                    // All results already seen at this tier — try next tier automatically
+                    const nextTier = tierIndex + 1;
+                    if (nextTier < NEARBY_RADIUS_TIERS.length) {
+                        // Mark all names from this tier as seen and recurse
+                        const newSeen = new Set(seenOverride || new Set());
+                        data.places.forEach(p => { if (p.displayName?.text) newSeen.add(p.displayName.text); });
+                        await fetchNearbyRestaurants(locationOverride, nextTier, newSeen, appendMode);
+                        return;
+                    } else {
+                        setHasMoreNearby(false);
+                    }
+                }
+            } else {
+                // No results at this tier — try expanding if in append mode
+                if (appendMode) {
+                    const nextTier = tierIndex + 1;
+                    if (nextTier < NEARBY_RADIUS_TIERS.length) {
+                        await fetchNearbyRestaurants(locationOverride, nextTier, seenOverride, appendMode);
+                        return;
+                    } else {
+                        setHasMoreNearby(false);
+                    }
+                } else if (!appendMode) {
+                    setNearbyRestaurants([]);
+                }
             }
         } catch (error) {
             console.error('Error fetching nearby restaurants:', error);
-            setNearbyRestaurants([]);
-            // Distinguish API key/auth errors from network errors
-            if (error.message && error.message.includes('403')) {
-                setNearbyApiError('key');
-            } else if (error.message && (error.message.includes('400') || error.message.includes('401'))) {
+            if (!appendMode) setNearbyRestaurants([]);
+            if (error.message && (error.message.includes('403') || error.message.includes('400') || error.message.includes('401'))) {
                 setNearbyApiError('key');
             } else {
                 setNearbyApiError('network');
             }
         } finally {
             setIsLoadingNearby(false);
+            setIsLoadingMoreNearby(false);
         }
+    };
+
+    // Load the next batch of restaurants, expanding radius if needed
+    const loadMoreNearby = () => {
+        const nextTier = nearbyRadiusTier + 1;
+        if (nextTier >= NEARBY_RADIUS_TIERS.length) {
+            setHasMoreNearby(false);
+            return;
+        }
+        const loc = searchLocation || userLocation;
+        fetchNearbyRestaurants(loc ? { lat: loc.lat, lng: loc.lng } : null, nextTier, seenNearbyNames, true);
     };
 
     const logInteraction = (type, data) => {
@@ -1165,15 +1239,14 @@ function RestaurantApp() {
         });
     }
 
-    // For favorites view, limit to 3 unless showing all
-    // For nearby view, limit to 5 unless showing all
-    const NEARBY_DEFAULT_LIMIT = 5;
+    // For favorites view, limit to 5 unless showing all
+    // For favorites view, limit to 5 unless showing all
+    // For nearby view, show all loaded restaurants (they come in via append)
+    const NEARBY_DEFAULT_LIMIT = 20;
     const FAVORITES_DEFAULT_LIMIT = 5;
     let displayRestaurants = filteredRestaurants;
     if (listFilter === 'favorites' && !showAllFavorites) {
         displayRestaurants = filteredRestaurants.slice(0, FAVORITES_DEFAULT_LIMIT);
-    } else if (listFilter === 'all' && !showAllNearby) {
-        displayRestaurants = filteredRestaurants.slice(0, NEARBY_DEFAULT_LIMIT);
     }
 
     // Compute unique cuisines available in the current pool for filter chips
